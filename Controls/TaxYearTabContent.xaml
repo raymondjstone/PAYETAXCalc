@@ -1,0 +1,372 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl
+    x:Class="PAYETAXCalc.Controls.TaxYearTabContent"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:PAYETAXCalc.Controls"
+    xmlns:converters="using:PAYETAXCalc.Converters"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <UserControl.Resources>
+        <converters:BoolToVisibilityConverter x:Key="BoolToVis"/>
+        <converters:CurrencyConverter x:Key="CurrencyFmt"/>
+        <converters:OverUnderPaymentConverter x:Key="OverUnderFmt"/>
+    </UserControl.Resources>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="24,16,24,24">
+        <StackPanel Spacing="16" MaxWidth="900">
+
+            <!-- Tax Rules Info -->
+            <InfoBar x:Name="RulesInfoBar"
+                     IsOpen="True" IsClosable="False"
+                     Severity="Informational"
+                     Title="Tax Rules"/>
+
+            <!-- ═══════════ EMPLOYMENTS ═══════════ -->
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="Employments &amp; Pensions" Style="{ThemeResource SubtitleTextBlockStyle}" VerticalAlignment="Center"/>
+                <Button Grid.Column="1" Click="AddEmployment_Click" Style="{ThemeResource AccentButtonStyle}">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <FontIcon Glyph="&#xE710;" FontSize="14"/>
+                        <TextBlock Text="Add Employment / Pension"/>
+                    </StackPanel>
+                </Button>
+            </Grid>
+
+            <ItemsControl x:Name="EmploymentsPanel">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Margin="0,0,0,8" Padding="16" CornerRadius="8"
+                                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1">
+                            <StackPanel Spacing="4">
+
+                                <!-- Header: Name, PAYE Ref, Remove -->
+                                <Grid ColumnDefinitions="*,*,Auto">
+                                    <TextBox Header="Employer / Pension Provider" Text="{Binding EmployerName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                             Margin="0,0,8,8" MinWidth="200"/>
+                                    <TextBox Grid.Column="1" Header="PAYE Reference" Text="{Binding PayeReference, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                             Margin="0,0,8,8"/>
+                                    <Button Grid.Column="2" VerticalAlignment="Top" Margin="0,20,0,0"
+                                            Click="RemoveEmployment_Click" ToolTipService.ToolTip="Remove">
+                                        <FontIcon Glyph="&#xE74D;" FontSize="14" Foreground="{ThemeResource SystemFillColorCriticalBrush}"/>
+                                    </Button>
+                                </Grid>
+
+                                <!-- Pension/Annuity toggle -->
+                                <CheckBox Content="This is a pension or annuity (not active employment)"
+                                          IsChecked="{Binding IsPensionOrAnnuity, Mode=TwoWay}"
+                                          Margin="0,0,0,4"/>
+
+                                <!-- Income: Salary/Pension, Tax Paid (always visible) -->
+                                <Grid ColumnDefinitions="*,*,Auto">
+                                    <NumberBox Header="Gross Income (£)"
+                                               Value="{Binding GrossSalary, Mode=TwoWay}"
+                                               SpinButtonPlacementMode="Compact" SmallChange="100" LargeChange="1000"
+                                               Margin="0,0,8,8" Minimum="0"/>
+                                    <NumberBox Grid.Column="1" Header="Tax Paid (£)"
+                                               Value="{Binding TaxPaid, Mode=TwoWay}"
+                                               SpinButtonPlacementMode="Compact" SmallChange="100" LargeChange="1000"
+                                               Margin="0,0,8,8" Minimum="0"/>
+                                </Grid>
+
+                                <!-- Active employment fields (hidden for pension/annuity) -->
+                                <StackPanel Visibility="{Binding IsPensionOrAnnuity, Converter={StaticResource BoolToVis}, ConverterParameter=Invert}"
+                                            Spacing="4">
+
+                                    <!-- NI, BIK -->
+                                    <Grid ColumnDefinitions="*,*,Auto">
+                                        <NumberBox Header="NI Paid (£)"
+                                                   Value="{Binding NationalInsurancePaid, Mode=TwoWay}"
+                                                   SpinButtonPlacementMode="Compact" SmallChange="100" LargeChange="1000"
+                                                   Margin="0,0,8,8" Minimum="0"/>
+                                        <NumberBox Grid.Column="1" Header="Benefits in Kind (£)"
+                                                   Value="{Binding BenefitsInKind, Mode=TwoWay}"
+                                                   SpinButtonPlacementMode="Compact" SmallChange="100" LargeChange="1000"
+                                                   Margin="0,0,8,8" Minimum="0"/>
+                                    </Grid>
+
+                                    <!-- Pension Contributions -->
+                                    <Grid ColumnDefinitions="*,*,Auto">
+                                        <NumberBox Header="Pension Contributions (£)"
+                                                   Value="{Binding PensionContributions, Mode=TwoWay}"
+                                                   SpinButtonPlacementMode="Compact" SmallChange="100" LargeChange="1000"
+                                                   Margin="0,0,8,8" Minimum="0"/>
+                                        <TextBlock Grid.Column="1" VerticalAlignment="Center" Margin="0,16,0,0"
+                                                   Text="Employee contributions not already deducted from gross salary"
+                                                   TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                                   Style="{ThemeResource CaptionTextBlockStyle}"/>
+                                    </Grid>
+
+                                    <!-- Allowable Expenses Section -->
+                                    <Expander HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
+                                              Margin="0,4,0,0" Padding="0">
+                                        <Expander.Header>
+                                            <TextBlock Text="Allowable Expenses (WFH, mileage, subscriptions, etc.)"
+                                                       Style="{ThemeResource BodyStrongTextBlockStyle}"/>
+                                        </Expander.Header>
+                                        <Expander.Content>
+                                            <StackPanel Spacing="4" Padding="0,8,0,4">
+                                                <!-- WFH and Mileage -->
+                                                <Grid ColumnDefinitions="*,*">
+                                                    <NumberBox Header="Working from Home (weeks)"
+                                                               Value="{Binding WorkFromHomeWeeks, Mode=TwoWay}"
+                                                               SpinButtonPlacementMode="Compact" SmallChange="1" LargeChange="4"
+                                                               Margin="0,0,8,8" Minimum="0" Maximum="52"
+                                                               PlaceholderText="HMRC flat rate per week"/>
+                                                    <NumberBox Grid.Column="1" Header="Business Miles (total)"
+                                                               Value="{Binding BusinessMiles, Mode=TwoWay}"
+                                                               SpinButtonPlacementMode="Compact" SmallChange="100" LargeChange="1000"
+                                                               Margin="0,0,0,8" Minimum="0"
+                                                               PlaceholderText="AMAP rate applied automatically"/>
+                                                </Grid>
+                                                <TextBlock Text="WFH: £6/week flat rate. Mileage: 45p/mile first 10,000, 25p/mile thereafter."
+                                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                                           Style="{ThemeResource CaptionTextBlockStyle}" TextWrapping="Wrap"
+                                                           Margin="0,0,0,8"/>
+
+                                                <!-- Professional Subscriptions and Uniform -->
+                                                <Grid ColumnDefinitions="*,*">
+                                                    <NumberBox Header="Professional Subscriptions (£)"
+                                                               Value="{Binding ProfessionalSubscriptions, Mode=TwoWay}"
+                                                               SpinButtonPlacementMode="Compact" SmallChange="10" LargeChange="50"
+                                                               Margin="0,0,8,8" Minimum="0"
+                                                               PlaceholderText="HMRC-approved bodies only"/>
+                                                    <NumberBox Grid.Column="1" Header="Uniform/Work Clothing (£)"
+                                                               Value="{Binding UniformAllowance, Mode=TwoWay}"
+                                                               SpinButtonPlacementMode="Compact" SmallChange="10" LargeChange="50"
+                                                               Margin="0,0,0,8" Minimum="0"
+                                                               PlaceholderText="Flat rate or actual cost"/>
+                                                </Grid>
+                                                <TextBlock Text="Professional subs: fees to HMRC-approved professional bodies. Uniform: £60 flat rate for laundering, or actual cost if higher."
+                                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                                           Style="{ThemeResource CaptionTextBlockStyle}" TextWrapping="Wrap"
+                                                           Margin="0,0,0,8"/>
+
+                                                <!-- Other Expenses -->
+                                                <Grid ColumnDefinitions="*,*">
+                                                    <NumberBox Header="Other Allowable Expenses (£)"
+                                                               Value="{Binding OtherExpenses, Mode=TwoWay}"
+                                                               SpinButtonPlacementMode="Compact" SmallChange="10" LargeChange="100"
+                                                               Margin="0,0,8,8" Minimum="0"/>
+                                                    <TextBox Grid.Column="1" Header="Description"
+                                                             Text="{Binding OtherExpensesDescription, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                             Margin="0,0,0,8"
+                                                             PlaceholderText="e.g. tools, equipment"/>
+                                                </Grid>
+                                            </StackPanel>
+                                        </Expander.Content>
+                                    </Expander>
+                                </StackPanel>
+
+                                <!-- Ended (always visible) -->
+                                <CheckBox Content="This income source ended in this tax year"
+                                          IsChecked="{Binding EmploymentEnded, Mode=TwoWay}" Margin="0,4,0,0"/>
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <!-- ═══════════ SAVINGS INTEREST ═══════════ -->
+            <Grid Margin="0,8,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="Savings Interest" Style="{ThemeResource SubtitleTextBlockStyle}" VerticalAlignment="Center"/>
+                <Button Grid.Column="1" Click="AddSavings_Click" Style="{ThemeResource AccentButtonStyle}">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <FontIcon Glyph="&#xE710;" FontSize="14"/>
+                        <TextBlock Text="Add Savings Account"/>
+                    </StackPanel>
+                </Button>
+            </Grid>
+
+            <ItemsControl x:Name="SavingsPanel">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Margin="0,0,0,8" Padding="16" CornerRadius="8"
+                                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1">
+                            <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*,*,Auto">
+                                <TextBox Header="Provider / Account Name"
+                                         Text="{Binding ProviderName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                         Margin="0,0,8,8" MinWidth="200"/>
+                                <NumberBox Grid.Column="1" Header="Interest Earned (£)"
+                                           Value="{Binding InterestAmount, Mode=TwoWay}"
+                                           SpinButtonPlacementMode="Compact" SmallChange="10" LargeChange="100"
+                                           Margin="0,0,8,8" Minimum="0"/>
+                                <Button Grid.Column="2" VerticalAlignment="Top" Margin="0,20,0,0"
+                                        Click="RemoveSavings_Click" ToolTipService.ToolTip="Remove savings account">
+                                    <FontIcon Glyph="&#xE74D;" FontSize="14" Foreground="{ThemeResource SystemFillColorCriticalBrush}"/>
+                                </Button>
+                                <CheckBox Grid.Row="1" Grid.ColumnSpan="2"
+                                          Content="Tax Free (Cash ISA / Stocks &amp; Shares ISA)"
+                                          IsChecked="{Binding IsTaxFree, Mode=TwoWay}" Margin="0,4,0,0"/>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <!-- ═══════════ OTHER DETAILS ═══════════ -->
+            <TextBlock Text="Other Details" Style="{ThemeResource SubtitleTextBlockStyle}" Margin="0,8,0,0"/>
+            <Border Padding="16" CornerRadius="8"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1">
+                <StackPanel Spacing="12">
+                    <CheckBox x:Name="MarriageAllowanceCheck" Content="Claim Marriage Allowance"
+                              IsChecked="{Binding ClaimMarriageAllowance, Mode=TwoWay}" Checked="MarriageAllowance_Changed" Unchecked="MarriageAllowance_Changed"/>
+                    <RadioButtons x:Name="MarriageDirectionPanel" Header="Marriage Allowance Direction"
+                                  Visibility="{Binding ClaimMarriageAllowance, Converter={StaticResource BoolToVis}}">
+                        <RadioButton x:Name="MAReceiver" Content="I am receiving the allowance transfer (my spouse earns less)"/>
+                        <RadioButton x:Name="MATransferrer" Content="I am transferring my allowance to my spouse"/>
+                    </RadioButtons>
+
+                    <CheckBox x:Name="BlindPersonCheck" Content="Claim Blind Person's Allowance"
+                              IsChecked="{Binding ClaimBlindPersonsAllowance, Mode=TwoWay}"/>
+
+                    <NumberBox x:Name="GiftAidBox" Header="Gift Aid Donations in this tax year (£)"
+                               Value="{Binding GiftAidDonations, Mode=TwoWay}"
+                               SpinButtonPlacementMode="Compact" SmallChange="10" LargeChange="100"
+                               Minimum="0" MaxWidth="300" HorizontalAlignment="Left"/>
+                </StackPanel>
+            </Border>
+
+            <!-- ═══════════ CALCULATE ═══════════ -->
+            <Button Click="Calculate_Click" Style="{ThemeResource AccentButtonStyle}"
+                    HorizontalAlignment="Stretch" Height="44" Margin="0,8,0,0">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <FontIcon Glyph="&#xE9D9;" FontSize="16"/>
+                    <TextBlock Text="Calculate Tax Liability" FontSize="15" FontWeight="SemiBold"/>
+                </StackPanel>
+            </Button>
+
+            <!-- ═══════════ RESULTS ═══════════ -->
+            <Border x:Name="ResultsPanel" Visibility="Collapsed"
+                    Padding="20" CornerRadius="8" Margin="0,4,0,0"
+                    Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}"
+                    BorderBrush="{ThemeResource AccentFillColorDefaultBrush}" BorderThickness="2">
+                <StackPanel Spacing="6">
+                    <TextBlock Text="Tax Calculation Summary" Style="{ThemeResource SubtitleTextBlockStyle}" Margin="0,0,0,8"/>
+
+                    <!-- Income Summary -->
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock Text="Total Employment/Pension Income:"/>
+                        <TextBlock x:Name="ResEmploymentIncome" Grid.Column="1" FontWeight="SemiBold"/>
+                    </Grid>
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock Text="Total Benefits in Kind:"/>
+                        <TextBlock x:Name="ResBIK" Grid.Column="1" FontWeight="SemiBold"/>
+                    </Grid>
+                    <Grid x:Name="ResPensionRow" ColumnDefinitions="*,Auto" Visibility="Collapsed">
+                        <TextBlock Text="Pension Contributions (tax relief):"/>
+                        <TextBlock x:Name="ResPension" Grid.Column="1" FontWeight="SemiBold"/>
+                    </Grid>
+                    <Grid x:Name="ResExpensesRow" ColumnDefinitions="*,Auto" Visibility="Collapsed">
+                        <TextBlock Text="Allowable Employment Expenses:"/>
+                        <TextBlock x:Name="ResExpenses" Grid.Column="1" FontWeight="SemiBold"/>
+                    </Grid>
+                    <TextBlock x:Name="ResExpensesBreakdown" Visibility="Collapsed"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                               Style="{ThemeResource CaptionTextBlockStyle}" Margin="12,0,0,0"/>
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock Text="Taxable Savings Interest:"/>
+                        <TextBlock x:Name="ResSavings" Grid.Column="1" FontWeight="SemiBold"/>
+                    </Grid>
+                    <Grid ColumnDefinitions="*,Auto" Visibility="{Binding TotalTaxFreeSavings, Converter={StaticResource BoolToVis}, FallbackValue=Collapsed}">
+                        <TextBlock Text="Tax-Free Savings (ISA):" Foreground="{ThemeResource SystemFillColorSuccessBrush}"/>
+                        <TextBlock x:Name="ResTaxFreeSavings" Grid.Column="1" Foreground="{ThemeResource SystemFillColorSuccessBrush}"/>
+                    </Grid>
+
+                    <Border Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="0,6"/>
+
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock Text="Gross Taxable Income:" FontWeight="SemiBold"/>
+                        <TextBlock x:Name="ResGross" Grid.Column="1" FontWeight="SemiBold"/>
+                    </Grid>
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock Text="Personal Allowance Used:"/>
+                        <TextBlock x:Name="ResPA" Grid.Column="1"/>
+                    </Grid>
+                    <Grid x:Name="ResGiftAidRow" ColumnDefinitions="*,Auto" Visibility="Collapsed">
+                        <TextBlock Text="Gift Aid Band Extension:"/>
+                        <TextBlock x:Name="ResGiftAid" Grid.Column="1"/>
+                    </Grid>
+                    <Grid x:Name="ResMarriageRow" ColumnDefinitions="*,Auto" Visibility="Collapsed">
+                        <TextBlock Text="Marriage Allowance Credit:"/>
+                        <TextBlock x:Name="ResMarriage" Grid.Column="1"/>
+                    </Grid>
+
+                    <Border Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="0,6"/>
+
+                    <!-- Tax Breakdown -->
+                    <TextBlock Text="Income Tax Breakdown" FontWeight="SemiBold" Margin="0,4,0,4"/>
+                    <Grid ColumnDefinitions="*,Auto,Auto">
+                        <TextBlock Text="Basic Rate (20%):"/>
+                        <TextBlock x:Name="ResBasicIncome" Grid.Column="1" Margin="0,0,20,0" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                        <TextBlock x:Name="ResBasicTax" Grid.Column="2" FontWeight="SemiBold"/>
+                    </Grid>
+                    <Grid ColumnDefinitions="*,Auto,Auto">
+                        <TextBlock Text="Higher Rate (40%):"/>
+                        <TextBlock x:Name="ResHigherIncome" Grid.Column="1" Margin="0,0,20,0" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                        <TextBlock x:Name="ResHigherTax" Grid.Column="2" FontWeight="SemiBold"/>
+                    </Grid>
+                    <Grid ColumnDefinitions="*,Auto,Auto">
+                        <TextBlock Text="Additional Rate (45%):"/>
+                        <TextBlock x:Name="ResAdditionalIncome" Grid.Column="1" Margin="0,0,20,0" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                        <TextBlock x:Name="ResAdditionalTax" Grid.Column="2" FontWeight="SemiBold"/>
+                    </Grid>
+                    <Grid x:Name="ResSavingsTaxRow" ColumnDefinitions="*,Auto" Visibility="Collapsed">
+                        <TextBlock Text="Tax on Savings:"/>
+                        <TextBlock x:Name="ResSavingsTax" Grid.Column="1" FontWeight="SemiBold"/>
+                    </Grid>
+
+                    <Border Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="0,6"/>
+
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock Text="Total Income Tax Due:" FontSize="16" FontWeight="Bold"/>
+                        <TextBlock x:Name="ResTotalTaxDue" Grid.Column="1" FontSize="16" FontWeight="Bold"/>
+                    </Grid>
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock Text="Total Tax Paid (PAYE):" FontSize="16"/>
+                        <TextBlock x:Name="ResTotalTaxPaid" Grid.Column="1" FontSize="16"/>
+                    </Grid>
+
+                    <Border Height="2" Background="{ThemeResource AccentFillColorDefaultBrush}" Margin="0,8"/>
+
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock x:Name="ResOverUnderLabel" Text="Difference:" FontSize="18" FontWeight="Bold"/>
+                        <TextBlock x:Name="ResOverUnder" Grid.Column="1" FontSize="18" FontWeight="Bold"/>
+                    </Grid>
+
+                    <Border Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="0,8"/>
+
+                    <!-- NI Summary -->
+                    <TextBlock Text="National Insurance" FontWeight="SemiBold" Margin="0,4,0,4"/>
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock Text="Total NI Paid:"/>
+                        <TextBlock x:Name="ResNIPaid" Grid.Column="1"/>
+                    </Grid>
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock Text="Expected NI:"/>
+                        <TextBlock x:Name="ResExpectedNI" Grid.Column="1"/>
+                    </Grid>
+
+                    <!-- Summary -->
+                    <InfoBar x:Name="ResultInfoBar" IsOpen="True" IsClosable="False" Margin="0,12,0,0"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Bottom spacing -->
+            <Border Height="24"/>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
