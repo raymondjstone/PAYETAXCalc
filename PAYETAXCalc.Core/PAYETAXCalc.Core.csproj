@@ -7,6 +7,12 @@
     <RootNamespace>PAYETAXCalc</RootNamespace>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="ClosedXML" Version="0.105.0" />
+    <PackageReference Include="QuestPDF" Version="2026.2.4" />
+    <PackageReference Include="DocumentFormat.OpenXml" Version="3.5.1" />
+  </ItemGroup>
+
   <!-- Link source files from the main project (no WinUI dependency needed) -->
   <ItemGroup>
     <Compile Include="..\Helpers\NotifyBase.cs" Link="Helpers\NotifyBase.cs" />
@@ -19,6 +25,7 @@
     <Compile Include="..\Services\TaxCalculator.cs" Link="Services\TaxCalculator.cs" />
     <Compile Include="..\Services\TaxRulesProvider.cs" Link="Services\TaxRulesProvider.cs" />
     <Compile Include="..\Services\DataService.cs" Link="Services\DataService.cs" />
+    <Compile Include="..\Services\ExportService.cs" Link="Services\ExportService.cs" />
   </ItemGroup>
 
 </Project>

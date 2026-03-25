@@ -785,4 +785,49 @@ public class TaxCalculatorTests
             Assert.False(string.IsNullOrEmpty(result.Summary));
         }
     }
+
+    // ═══════════ Future / estimated years ═══════════
+
+    [Fact]
+    public void Future_Year_With_Estimated_Rules_Calculates()
+    {
+        var rules = TaxRulesProvider.GetOrEstimateRules("2030/31");
+        var data = MakeData(50000, taxYear: "2030/31");
+        var result = TaxCalculator.Calculate(data, rules);
+
+        Assert.True(result.TotalIncomeTaxDue > 0);
+        Assert.True(result.TaxableNonSavingsIncome > 0);
+        Assert.False(string.IsNullOrEmpty(result.Summary));
+    }
+
+    [Fact]
+    public void Estimated_Rules_Produce_Same_Tax_As_Latest_Known()
+    {
+        var latestDefined = TaxRulesProvider.GetDefinedTaxYears();
+        var latestYear = latestDefined[^1];
+        var latestRules = TaxRulesProvider.GetRules(latestYear)!;
+
+        var estimatedRules = TaxRulesProvider.GetOrEstimateRules("2030/31");
+
+        // Same salary should produce same tax with same rates
+        var data1 = MakeData(50000, taxYear: latestYear);
+        var result1 = TaxCalculator.Calculate(data1, latestRules);
+
+        var data2 = MakeData(50000, taxYear: "2030/31");
+        var result2 = TaxCalculator.Calculate(data2, estimatedRules);
+
+        Assert.Equal(result1.TotalIncomeTaxDue, result2.TotalIncomeTaxDue);
+        Assert.Equal(result1.ExpectedNI, result2.ExpectedNI);
+    }
+
+    [Fact]
+    public void Future_Year_Scottish_Calculates()
+    {
+        var rules = TaxRulesProvider.GetOrEstimateRules("2028/29");
+        var data = MakeData(60000, taxYear: "2028/29", scottish: true);
+        var result = TaxCalculator.Calculate(data, rules);
+
+        Assert.True(result.TotalIncomeTaxDue > 0);
+        Assert.Contains(result.TaxBreakdown, b => b.Label.Contains("Starter"));
+    }
 }

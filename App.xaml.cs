@@ -4,7 +4,7 @@ namespace PAYETAXCalc
 {
     public partial class App : Application
     {
-        private Window? _window;
+        public Window? m_window;
 
         public App()
         {
@@ -13,8 +13,8 @@ namespace PAYETAXCalc
 
         protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
         {
-            _window = new MainWindow();
-            _window.Activate();
+            m_window = new MainWindow();
+            m_window.Activate();
         }
     }
 }

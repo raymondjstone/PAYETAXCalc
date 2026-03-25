@@ -5,7 +5,8 @@
       "Bash(ls /c/Code/PAYETAXCalc/*.sln)",
       "Bash(dotnet test:*)",
       "Bash(dotnet --info)",
-      "Bash(dotnet clean:*)"
+      "Bash(dotnet clean:*)",
+      "Bash(dotnet add:*)"
     ]
   }
 }

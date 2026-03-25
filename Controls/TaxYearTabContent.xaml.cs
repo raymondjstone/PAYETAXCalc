@@ -3,6 +3,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using PAYETAXCalc.Models;
 using PAYETAXCalc.Services;
+using Windows.Storage.Pickers;
 
 namespace PAYETAXCalc.Controls
 {
@@ -22,7 +23,7 @@ namespace PAYETAXCalc.Controls
         public void LoadData(TaxYearData data)
         {
             TaxYearData = data;
-            Rules = TaxRulesProvider.GetRules(data.TaxYear);
+            Rules = TaxRulesProvider.GetOrEstimateRules(data.TaxYear);
 
             EmploymentsPanel.ItemsSource = data.Employments;
             SavingsPanel.ItemsSource = data.SavingsIncomes;
@@ -37,17 +38,10 @@ namespace PAYETAXCalc.Controls
             else
                 MATransferrer.IsChecked = true;
 
-            if (Rules != null)
-            {
-                RulesInfoBar.Title = $"Tax Rules for {data.TaxYear}";
-                RulesInfoBar.Message = TaxRulesProvider.GetRulesSummary(Rules);
-            }
-            else
-            {
-                RulesInfoBar.Title = $"Tax Year {data.TaxYear}";
-                RulesInfoBar.Message = "Warning: No tax rules found for this year. Calculation may be inaccurate.";
+            RulesInfoBar.Title = $"Tax Rules for {data.TaxYear}";
+            RulesInfoBar.Message = TaxRulesProvider.GetRulesSummary(Rules);
+            if (TaxRulesProvider.IsEstimated(data.TaxYear))
                 RulesInfoBar.Severity = InfoBarSeverity.Warning;
-            }
 
             ResultsPanel.Visibility = Visibility.Collapsed;
         }
@@ -106,10 +100,77 @@ namespace PAYETAXCalc.Controls
         {
             if (TaxYearData == null || Rules == null) return;
 
+            // Re-fetch rules in case they've been updated for this year
+            Rules = TaxRulesProvider.GetOrEstimateRules(TaxYearData.TaxYear);
+
             SyncDataFromUI();
             _lastResult = TaxCalculator.Calculate(TaxYearData, Rules);
             DisplayResults(_lastResult);
             DataChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        private async void ExportExcel_Click(object sender, RoutedEventArgs e)
+        {
+            if (TaxYearData == null || Rules == null || _lastResult == null) return;
+            await ExportToFile("Excel Workbook", ".xlsx", new[] { ".xlsx" },
+                path => ExportService.ExportToExcel(path, TaxYearData, Rules, _lastResult));
+        }
+
+        private async void ExportPdf_Click(object sender, RoutedEventArgs e)
+        {
+            if (TaxYearData == null || Rules == null || _lastResult == null) return;
+            await ExportToFile("PDF Document", ".pdf", new[] { ".pdf" },
+                path => ExportService.ExportToPdf(path, TaxYearData, Rules, _lastResult));
+        }
+
+        private async void ExportWord_Click(object sender, RoutedEventArgs e)
+        {
+            if (TaxYearData == null || Rules == null || _lastResult == null) return;
+            await ExportToFile("Word Document", ".docx", new[] { ".docx" },
+                path => ExportService.ExportToWord(path, TaxYearData, Rules, _lastResult));
+        }
+
+        private async System.Threading.Tasks.Task ExportToFile(
+            string typeName, string defaultExt, string[] extensions, Action<string> exportAction)
+        {
+            var picker = new FileSavePicker();
+            picker.SuggestedStartLocation = PickerLocationId.DocumentsLibrary;
+            picker.SuggestedFileName = $"TaxCalculation_{TaxYearData!.TaxYear.Replace("/", "-")}";
+            picker.FileTypeChoices.Add(typeName, extensions);
+
+            // WinUI 3 requires HWND
+            var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(
+                ((Microsoft.UI.Xaml.Application.Current as App)!).m_window!);
+            WinRT.Interop.InitializeWithWindow.Initialize(picker, hwnd);
+
+            var file = await picker.PickSaveFileAsync();
+            if (file != null)
+            {
+                try
+                {
+                    exportAction(file.Path);
+
+                    var dialog = new ContentDialog
+                    {
+                        Title = "Export Complete",
+                        Content = $"File saved to:\n{file.Path}",
+                        CloseButtonText = "OK",
+                        XamlRoot = this.XamlRoot,
+                    };
+                    await dialog.ShowAsync();
+                }
+                catch (Exception ex)
+                {
+                    var dialog = new ContentDialog
+                    {
+                        Title = "Export Failed",
+                        Content = $"Error: {ex.Message}",
+                        CloseButtonText = "OK",
+                        XamlRoot = this.XamlRoot,
+                    };
+                    await dialog.ShowAsync();
+                }
+            }
         }
 
         private void DisplayResults(TaxCalculationResult r)

@@ -160,29 +160,29 @@ namespace PAYETAXCalc
 
         private async void TaxYearTabs_AddTabButtonClick(TabView sender, object args)
         {
-            var availableYears = TaxRulesProvider.GetAvailableTaxYears();
+            var suggestedYears = TaxRulesProvider.GetAvailableTaxYears();
             var existingYears = _appData.TaxYears.Select(t => t.TaxYear).ToHashSet();
-            var newYears = availableYears.Where(y => !existingYears.Contains(y)).ToList();
-
-            if (newYears.Count == 0)
-            {
-                var noYearsDialog = new ContentDialog
-                {
-                    Title = "No More Tax Years",
-                    Content = "All available tax years have already been added.",
-                    CloseButtonText = "OK",
-                    XamlRoot = Content.XamlRoot,
-                };
-                await noYearsDialog.ShowAsync();
-                return;
-            }
+            var newYears = suggestedYears.Where(y => !existingYears.Contains(y)).ToList();
 
             var combo = new ComboBox
             {
                 ItemsSource = newYears,
-                SelectedIndex = newYears.Count - 1,
+                SelectedIndex = newYears.Count > 0 ? newYears.Count - 1 : -1,
                 HorizontalAlignment = HorizontalAlignment.Stretch,
                 Margin = new Thickness(0, 8, 0, 0),
+                IsEditable = true,
+                PlaceholderText = "e.g. 2027/28 or 2027",
+            };
+
+            var infoText = new TextBlock
+            {
+                Text = "Select a suggested year or type any year (e.g. 2027/28).\n" +
+                       "Non-ended employments and savings will be carried forward.\n" +
+                       "Future years use the latest known tax rates as estimates.",
+                Margin = new Thickness(0, 12, 0, 0),
+                TextWrapping = TextWrapping.Wrap,
+                Foreground = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["TextFillColorSecondaryBrush"],
+                Style = (Style)Application.Current.Resources["CaptionTextBlockStyle"],
             };
 
             var dialog = new ContentDialog
@@ -192,16 +192,9 @@ namespace PAYETAXCalc
                 {
                     Children =
                     {
-                        new TextBlock { Text = "Select a tax year to add:" },
+                        new TextBlock { Text = "Select or enter a tax year:" },
                         combo,
-                        new TextBlock
-                        {
-                            Text = "Non-ended employments and savings accounts will be carried forward from the previous year.",
-                            Margin = new Thickness(0, 12, 0, 0),
-                            TextWrapping = TextWrapping.Wrap,
-                            Foreground = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["TextFillColorSecondaryBrush"],
-                            Style = (Style)Application.Current.Resources["CaptionTextBlockStyle"],
-                        },
+                        infoText,
                     },
                 },
                 PrimaryButtonText = "Add",
@@ -211,51 +204,89 @@ namespace PAYETAXCalc
             };
 
             var result = await dialog.ShowAsync();
-            if (result == ContentDialogResult.Primary && combo.SelectedItem is string selectedYear)
+            if (result != ContentDialogResult.Primary) return;
+
+            // Get the selected or typed value
+            string? input = combo.SelectedItem as string ?? combo.Text;
+            if (string.IsNullOrWhiteSpace(input)) return;
+
+            // Parse and validate the tax year
+            string selectedYear;
+            if (TaxRulesProvider.TryParseTaxYear(input, out string parsed))
             {
-                var rules = TaxRulesProvider.GetRules(selectedYear);
-                if (rules == null)
-                {
-                    var warnDialog = new ContentDialog
-                    {
-                        Title = "Warning",
-                        Content = $"No tax rules found for {selectedYear}. The calculator may not produce accurate results.",
-                        PrimaryButtonText = "Add Anyway",
-                        CloseButtonText = "Cancel",
-                        XamlRoot = Content.XamlRoot,
-                    };
-                    var warnResult = await warnDialog.ShowAsync();
-                    if (warnResult != ContentDialogResult.Primary)
-                        return;
-                }
-
-                TaxYearData? previousYear = null;
-                var sortedExisting = _appData.TaxYears.OrderByDescending(t => t.TaxYear).ToList();
-                foreach (var ty in sortedExisting)
-                {
-                    if (string.Compare(ty.TaxYear, selectedYear) < 0)
-                    {
-                        previousYear = ty;
-                        break;
-                    }
-                }
-
-                var newData = DataService.CreateNewTaxYear(selectedYear, previousYear);
-                _appData.TaxYears.Add(newData);
-                _appData.TaxYears = _appData.TaxYears.OrderBy(t => t.TaxYear).ToList();
-
-                TaxYearTabs.TabItems.Clear();
-                foreach (var ty in _appData.TaxYears)
-                {
-                    AddTab(ty);
-                }
-
-                var newTabIndex = _appData.TaxYears.FindIndex(t => t.TaxYear == selectedYear);
-                if (newTabIndex >= 0)
-                    TaxYearTabs.SelectedIndex = newTabIndex;
-
-                SaveData();
+                selectedYear = parsed;
             }
+            else
+            {
+                var errorDialog = new ContentDialog
+                {
+                    Title = "Invalid Tax Year",
+                    Content = "Please enter a valid tax year in YYYY/YY format (e.g. 2027/28) or just the start year (e.g. 2027).",
+                    CloseButtonText = "OK",
+                    XamlRoot = Content.XamlRoot,
+                };
+                await errorDialog.ShowAsync();
+                return;
+            }
+
+            // Check if already exists
+            if (existingYears.Contains(selectedYear))
+            {
+                var existsDialog = new ContentDialog
+                {
+                    Title = "Already Added",
+                    Content = $"Tax year {selectedYear} has already been added.",
+                    CloseButtonText = "OK",
+                    XamlRoot = Content.XamlRoot,
+                };
+                await existsDialog.ShowAsync();
+                return;
+            }
+
+            // Warn if estimated rates
+            if (TaxRulesProvider.IsEstimated(selectedYear))
+            {
+                var warnDialog = new ContentDialog
+                {
+                    Title = "Estimated Rates",
+                    Content = $"No specific tax rules are defined for {selectedYear}.\n\n" +
+                              "The latest known rates will be used as an estimate. " +
+                              "Rates will be updated automatically if specific rules become available in a future version.",
+                    PrimaryButtonText = "Add with Estimated Rates",
+                    CloseButtonText = "Cancel",
+                    XamlRoot = Content.XamlRoot,
+                };
+                var warnResult = await warnDialog.ShowAsync();
+                if (warnResult != ContentDialogResult.Primary)
+                    return;
+            }
+
+            TaxYearData? previousYear = null;
+            var sortedExisting = _appData.TaxYears.OrderByDescending(t => t.TaxYear).ToList();
+            foreach (var ty in sortedExisting)
+            {
+                if (string.Compare(ty.TaxYear, selectedYear) < 0)
+                {
+                    previousYear = ty;
+                    break;
+                }
+            }
+
+            var newData = DataService.CreateNewTaxYear(selectedYear, previousYear);
+            _appData.TaxYears.Add(newData);
+            _appData.TaxYears = _appData.TaxYears.OrderBy(t => t.TaxYear).ToList();
+
+            TaxYearTabs.TabItems.Clear();
+            foreach (var ty in _appData.TaxYears)
+            {
+                AddTab(ty);
+            }
+
+            var newTabIndex = _appData.TaxYears.FindIndex(t => t.TaxYear == selectedYear);
+            if (newTabIndex >= 0)
+                TaxYearTabs.SelectedIndex = newTabIndex;
+
+            SaveData();
         }
 
         private async void TaxYearTabs_TabCloseRequested(TabView sender, TabViewTabCloseRequestedEventArgs args)

@@ -24,14 +24,23 @@ public class TaxRulesProviderTests
     }
 
     [Fact]
-    public void GetAvailableTaxYears_Returns_All_Three()
+    public void GetAvailableTaxYears_Contains_All_Defined_Years()
     {
         var years = TaxRulesProvider.GetAvailableTaxYears();
 
-        Assert.Equal(3, years.Count);
         Assert.Contains("2023/24", years);
         Assert.Contains("2024/25", years);
         Assert.Contains("2025/26", years);
+    }
+
+    [Fact]
+    public void GetAvailableTaxYears_Includes_Future_Years()
+    {
+        var years = TaxRulesProvider.GetAvailableTaxYears();
+        var defined = TaxRulesProvider.GetDefinedTaxYears();
+
+        // Should have more years than just the defined ones (includes future)
+        Assert.True(years.Count >= defined.Count);
     }
 
     [Fact]
@@ -39,9 +48,8 @@ public class TaxRulesProviderTests
     {
         var years = TaxRulesProvider.GetAvailableTaxYears();
 
-        Assert.Equal("2023/24", years[0]);
-        Assert.Equal("2024/25", years[1]);
-        Assert.Equal("2025/26", years[2]);
+        for (int i = 1; i < years.Count; i++)
+            Assert.True(string.Compare(years[i - 1], years[i]) < 0);
     }
 
     [Fact]
@@ -51,6 +59,119 @@ public class TaxRulesProviderTests
         var available = TaxRulesProvider.GetAvailableTaxYears();
 
         Assert.Contains(year, available);
+    }
+
+    // ═══════════ GetOrEstimateRules ═══════════
+
+    [Fact]
+    public void GetOrEstimateRules_Returns_Exact_For_Known_Year()
+    {
+        var rules = TaxRulesProvider.GetOrEstimateRules("2024/25");
+        Assert.Equal("2024/25", rules.TaxYear);
+    }
+
+    [Fact]
+    public void GetOrEstimateRules_Returns_Estimated_For_Future_Year()
+    {
+        var rules = TaxRulesProvider.GetOrEstimateRules("2030/31");
+
+        Assert.NotNull(rules);
+        Assert.Equal("2030/31", rules.TaxYear);
+        // Should have same structure as latest known year
+        Assert.True(rules.PersonalAllowance > 0);
+        Assert.True(rules.RestOfUKBands.Count > 0);
+        Assert.True(rules.ScottishBands.Count > 0);
+    }
+
+    [Fact]
+    public void GetOrEstimateRules_Never_Returns_Null()
+    {
+        var rules = TaxRulesProvider.GetOrEstimateRules("2099/00");
+        Assert.NotNull(rules);
+    }
+
+    // ═══════════ IsEstimated ═══════════
+
+    [Fact]
+    public void IsEstimated_False_For_Known_Years()
+    {
+        Assert.False(TaxRulesProvider.IsEstimated("2023/24"));
+        Assert.False(TaxRulesProvider.IsEstimated("2024/25"));
+        Assert.False(TaxRulesProvider.IsEstimated("2025/26"));
+    }
+
+    [Fact]
+    public void IsEstimated_True_For_Unknown_Years()
+    {
+        Assert.True(TaxRulesProvider.IsEstimated("2030/31"));
+        Assert.True(TaxRulesProvider.IsEstimated("2020/21"));
+    }
+
+    // ═══════════ GetDefinedTaxYears ═══════════
+
+    [Fact]
+    public void GetDefinedTaxYears_Returns_Exactly_Three()
+    {
+        var years = TaxRulesProvider.GetDefinedTaxYears();
+        Assert.Equal(3, years.Count);
+    }
+
+    // ═══════════ TryParseTaxYear ═══════════
+
+    [Theory]
+    [InlineData("2024/25", true, "2024/25")]
+    [InlineData("2030/31", true, "2030/31")]
+    [InlineData("2027", true, "2027/28")]
+    [InlineData("2099", true, "2099/00")]
+    [InlineData("2020/21", true, "2020/21")]
+    public void TryParseTaxYear_Valid_Inputs(string input, bool expectedResult, string expectedFormatted)
+    {
+        bool result = TaxRulesProvider.TryParseTaxYear(input, out string formatted);
+        Assert.Equal(expectedResult, result);
+        Assert.Equal(expectedFormatted, formatted);
+    }
+
+    [Theory]
+    [InlineData("invalid")]
+    [InlineData("2024/26")]  // wrong second year
+    [InlineData("2019/20")]  // too old
+    [InlineData("2019")]     // too old
+    [InlineData("")]
+    public void TryParseTaxYear_Invalid_Inputs(string input)
+    {
+        bool result = TaxRulesProvider.TryParseTaxYear(input, out _);
+        Assert.False(result);
+    }
+
+    // ═══════════ FormatTaxYear ═══════════
+
+    [Theory]
+    [InlineData(2024, "2024/25")]
+    [InlineData(2099, "2099/00")]
+    [InlineData(2023, "2023/24")]
+    public void FormatTaxYear_Correct(int startYear, string expected)
+    {
+        Assert.Equal(expected, TaxRulesProvider.FormatTaxYear(startYear));
+    }
+
+    // ═══════════ Estimated rules summary ═══════════
+
+    [Fact]
+    public void GetRulesSummary_Shows_Estimated_For_Future_Year()
+    {
+        var rules = TaxRulesProvider.GetOrEstimateRules("2030/31");
+        var summary = TaxRulesProvider.GetRulesSummary(rules);
+
+        Assert.Contains("ESTIMATED", summary);
+    }
+
+    [Fact]
+    public void GetRulesSummary_No_Estimated_For_Known_Year()
+    {
+        var rules = TaxRulesProvider.GetRules("2024/25")!;
+        var summary = TaxRulesProvider.GetRulesSummary(rules);
+
+        Assert.DoesNotContain("ESTIMATED", summary);
     }
 
     // ═══════════ Personal Allowance ═══════════

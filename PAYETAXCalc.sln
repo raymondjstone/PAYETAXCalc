@@ -1,0 +1,33 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 18
+VisualStudioVersion = 18.4.11605.240 stable
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{911E67C6-3D85-4FCE-B560-20A9C3E3FF48}") = "PAYETAXCalc", "bin\x64\Debug\net8.0-windows10.0.19041.0\win-x64\AppX\PAYETAXCalc.exe", "{11028F0A-A639-7B4B-ED81-84125EB4E349}"
+	ProjectSection(DebuggerProjectSystem) = preProject
+		PortSupplier = 00000000-0000-0000-0000-000000000000
+		Executable = C:\Code\PAYETAXCalc\bin\x64\Debug\net8.0-windows10.0.19041.0\win-x64\AppX\PAYETAXCalc.exe
+		RemoteMachine = LENNY
+		StartingDirectory = C:\Code\PAYETAXCalc\bin\x64\Debug\net8.0-windows10.0.19041.0\win-x64\AppX
+		Environment = Default
+		LaunchingEngine = 00000000-0000-0000-0000-000000000000
+		UseLegacyDebugEngines = No
+		LaunchSQLEngine = No
+		AttachLaunchAction = No
+		IORedirection = Auto
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{11028F0A-A639-7B4B-ED81-84125EB4E349}.Release|x64.ActiveCfg = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {D00AE8B9-8CFB-4ADD-B766-5CA1008B7B17}
+	EndGlobalSection
+EndGlobal
