@@ -19,6 +19,20 @@ namespace PAYETAXCalc.Services
                 HigherRate = 0.40m,
                 AdditionalRateThresholdGross = 125140m,
                 AdditionalRate = 0.45m,
+                RestOfUKBands = new()
+                {
+                    new TaxBand { Name = "Basic (20%)", Rate = 0.20m, UpperGrossThreshold = 50270m },
+                    new TaxBand { Name = "Higher (40%)", Rate = 0.40m, UpperGrossThreshold = 125140m },
+                    new TaxBand { Name = "Additional (45%)", Rate = 0.45m, UpperGrossThreshold = 0 },
+                },
+                ScottishBands = new()
+                {
+                    new TaxBand { Name = "Starter (19%)", Rate = 0.19m, UpperGrossThreshold = 14732m, ExtendsWithGiftAid = false },
+                    new TaxBand { Name = "Basic (20%)", Rate = 0.20m, UpperGrossThreshold = 25688m },
+                    new TaxBand { Name = "Intermediate (21%)", Rate = 0.21m, UpperGrossThreshold = 43662m },
+                    new TaxBand { Name = "Higher (42%)", Rate = 0.42m, UpperGrossThreshold = 125140m },
+                    new TaxBand { Name = "Top (47%)", Rate = 0.47m, UpperGrossThreshold = 0 },
+                },
                 NICPrimaryThreshold = 12570m,
                 NICUpperEarningsLimit = 50270m,
                 NICMainRate = 0.12m,
@@ -44,6 +58,21 @@ namespace PAYETAXCalc.Services
                 HigherRate = 0.40m,
                 AdditionalRateThresholdGross = 125140m,
                 AdditionalRate = 0.45m,
+                RestOfUKBands = new()
+                {
+                    new TaxBand { Name = "Basic (20%)", Rate = 0.20m, UpperGrossThreshold = 50270m },
+                    new TaxBand { Name = "Higher (40%)", Rate = 0.40m, UpperGrossThreshold = 125140m },
+                    new TaxBand { Name = "Additional (45%)", Rate = 0.45m, UpperGrossThreshold = 0 },
+                },
+                ScottishBands = new()
+                {
+                    new TaxBand { Name = "Starter (19%)", Rate = 0.19m, UpperGrossThreshold = 14876m, ExtendsWithGiftAid = false },
+                    new TaxBand { Name = "Basic (20%)", Rate = 0.20m, UpperGrossThreshold = 26561m },
+                    new TaxBand { Name = "Intermediate (21%)", Rate = 0.21m, UpperGrossThreshold = 43662m },
+                    new TaxBand { Name = "Higher (42%)", Rate = 0.42m, UpperGrossThreshold = 75000m },
+                    new TaxBand { Name = "Advanced (45%)", Rate = 0.45m, UpperGrossThreshold = 125140m },
+                    new TaxBand { Name = "Top (48%)", Rate = 0.48m, UpperGrossThreshold = 0 },
+                },
                 NICPrimaryThreshold = 12570m,
                 NICUpperEarningsLimit = 50270m,
                 NICMainRate = 0.08m,
@@ -69,6 +98,21 @@ namespace PAYETAXCalc.Services
                 HigherRate = 0.40m,
                 AdditionalRateThresholdGross = 125140m,
                 AdditionalRate = 0.45m,
+                RestOfUKBands = new()
+                {
+                    new TaxBand { Name = "Basic (20%)", Rate = 0.20m, UpperGrossThreshold = 50270m },
+                    new TaxBand { Name = "Higher (40%)", Rate = 0.40m, UpperGrossThreshold = 125140m },
+                    new TaxBand { Name = "Additional (45%)", Rate = 0.45m, UpperGrossThreshold = 0 },
+                },
+                ScottishBands = new()
+                {
+                    new TaxBand { Name = "Starter (19%)", Rate = 0.19m, UpperGrossThreshold = 15397m, ExtendsWithGiftAid = false },
+                    new TaxBand { Name = "Basic (20%)", Rate = 0.20m, UpperGrossThreshold = 27491m },
+                    new TaxBand { Name = "Intermediate (21%)", Rate = 0.21m, UpperGrossThreshold = 43662m },
+                    new TaxBand { Name = "Higher (42%)", Rate = 0.42m, UpperGrossThreshold = 75000m },
+                    new TaxBand { Name = "Advanced (45%)", Rate = 0.45m, UpperGrossThreshold = 125140m },
+                    new TaxBand { Name = "Top (48%)", Rate = 0.48m, UpperGrossThreshold = 0 },
+                },
                 NICPrimaryThreshold = 12570m,
                 NICUpperEarningsLimit = 50270m,
                 NICMainRate = 0.08m,
@@ -108,12 +152,16 @@ namespace PAYETAXCalc.Services
         {
             return $"Tax Year {rules.TaxYear}\n" +
                    $"Personal Allowance: £{rules.PersonalAllowance:N0} (tapers above £{rules.PersonalAllowanceTaperThreshold:N0})\n" +
-                   $"Basic Rate: {rules.BasicRate:P0} on first £{rules.BasicRateBandWidth:N0} of taxable income\n" +
-                   $"Higher Rate: {rules.HigherRate:P0} up to £{rules.AdditionalRateThresholdGross:N0}\n" +
-                   $"Additional Rate: {rules.AdditionalRate:P0} above £{rules.AdditionalRateThresholdGross:N0}\n" +
+                   $"rUK: {FormatBands(rules.RestOfUKBands)}\n" +
+                   $"Scotland: {FormatBands(rules.ScottishBands)}\n" +
                    $"Employee NIC: {rules.NICMainRate:P0} (£{rules.NICPrimaryThreshold:N0}-£{rules.NICUpperEarningsLimit:N0}), {rules.NICUpperRate:P0} above\n" +
-                   $"WFH: £{rules.WorkFromHomeWeeklyRate}/week | Mileage: {rules.MileageRateFirst10000 * 100}p/mile (first 10k), {rules.MileageRateOver10000 * 100}p (over)\n" +
-                   $"Uniform flat rate: £{rules.FlatRateUniformAllowance:N0} | PSA: £{rules.PersonalSavingsAllowanceBasic:N0} (basic) / £{rules.PersonalSavingsAllowanceHigher:N0} (higher)";
+                   $"WFH: £{rules.WorkFromHomeWeeklyRate}/week | Mileage: {rules.MileageRateFirst10000 * 100}p first 10k, {rules.MileageRateOver10000 * 100}p over\n" +
+                   $"PSA: £{rules.PersonalSavingsAllowanceBasic:N0} (basic) / £{rules.PersonalSavingsAllowanceHigher:N0} (higher)";
+        }
+
+        private static string FormatBands(List<TaxBand> bands)
+        {
+            return string.Join(", ", bands.Select(b => $"{b.Rate:P0}" + (b.UpperGrossThreshold > 0 ? $" to £{b.UpperGrossThreshold:N0}" : "+")));
         }
     }
 }

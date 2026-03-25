@@ -1,5 +1,22 @@
+using System.Collections.Generic;
+
 namespace PAYETAXCalc.Models
 {
+    public class TaxBand
+    {
+        public string Name { get; set; } = "";
+        public decimal Rate { get; set; }
+        public decimal UpperGrossThreshold { get; set; } // 0 = no upper limit (top band)
+        public bool ExtendsWithGiftAid { get; set; } = true; // false for Scottish starter
+    }
+
+    public class TaxBreakdownLine
+    {
+        public string Label { get; set; } = "";
+        public string IncomeText { get; set; } = "";
+        public string TaxText { get; set; } = "";
+    }
+
     public class TaxYearRules
     {
         public string TaxYear { get; set; } = "";
@@ -8,20 +25,26 @@ namespace PAYETAXCalc.Models
         public decimal PersonalAllowance { get; set; }
         public decimal PersonalAllowanceTaperThreshold { get; set; }
 
-        // Income Tax Bands (England/Wales/NI)
+        // Income Tax Bands - rUK (England/Wales/NI) - gross upper thresholds
         public decimal BasicRateBandWidth { get; set; }
         public decimal BasicRate { get; set; }
         public decimal HigherRate { get; set; }
         public decimal AdditionalRateThresholdGross { get; set; }
         public decimal AdditionalRate { get; set; }
 
-        // Employee Class 1 NIC
+        // rUK bands as list (populated by TaxRulesProvider)
+        public List<TaxBand> RestOfUKBands { get; set; } = new();
+
+        // Scottish income tax bands (different rates/thresholds)
+        public List<TaxBand> ScottishBands { get; set; } = new();
+
+        // Employee Class 1 NIC (same for all UK)
         public decimal NICPrimaryThreshold { get; set; }
         public decimal NICUpperEarningsLimit { get; set; }
         public decimal NICMainRate { get; set; }
         public decimal NICUpperRate { get; set; }
 
-        // Savings
+        // Savings (same for all UK - always rUK rates)
         public decimal PersonalSavingsAllowanceBasic { get; set; }
         public decimal PersonalSavingsAllowanceHigher { get; set; }
         public decimal StartingRateForSavingsLimit { get; set; }
@@ -36,9 +59,9 @@ namespace PAYETAXCalc.Models
         public decimal DividendAllowance { get; set; }
 
         // HMRC Flat Rate Expenses
-        public decimal WorkFromHomeWeeklyRate { get; set; }          // £6/week
-        public decimal MileageRateFirst10000 { get; set; }           // 45p/mile
-        public decimal MileageRateOver10000 { get; set; }            // 25p/mile
-        public decimal FlatRateUniformAllowance { get; set; }        // General flat rate for laundering uniform
+        public decimal WorkFromHomeWeeklyRate { get; set; }
+        public decimal MileageRateFirst10000 { get; set; }
+        public decimal MileageRateOver10000 { get; set; }
+        public decimal FlatRateUniformAllowance { get; set; }
     }
 }

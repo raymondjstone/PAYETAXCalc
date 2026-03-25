@@ -30,6 +30,7 @@ namespace PAYETAXCalc.Models
         private decimal _taxOverUnderPayment;
         private string _summary = "";
         private string _expensesBreakdown = "";
+        private List<TaxBreakdownLine> _taxBreakdown = new();
 
         public decimal TotalEmploymentIncome { get => _totalEmploymentIncome; set => SetProperty(ref _totalEmploymentIncome, value); }
         public decimal TotalBenefitsInKind { get => _totalBenefitsInKind; set => SetProperty(ref _totalBenefitsInKind, value); }
@@ -57,5 +58,6 @@ namespace PAYETAXCalc.Models
         public decimal TaxOverUnderPayment { get => _taxOverUnderPayment; set => SetProperty(ref _taxOverUnderPayment, value); }
         public string Summary { get => _summary; set => SetProperty(ref _summary, value); }
         public string ExpensesBreakdown { get => _expensesBreakdown; set => SetProperty(ref _expensesBreakdown, value); }
+        public List<TaxBreakdownLine> TaxBreakdown { get => _taxBreakdown; set => SetProperty(ref _taxBreakdown, value); }
     }
 }

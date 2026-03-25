@@ -6,6 +6,7 @@ namespace PAYETAXCalc.Models
     public class TaxYearData : NotifyBase
     {
         private string _taxYear = "";
+        private bool _isScottishTaxpayer;
         private bool _claimMarriageAllowance;
         private bool _isMarriageAllowanceReceiver;
         private bool _claimBlindPersonsAllowance;
@@ -15,6 +16,12 @@ namespace PAYETAXCalc.Models
         {
             get => _taxYear;
             set => SetProperty(ref _taxYear, value);
+        }
+
+        public bool IsScottishTaxpayer
+        {
+            get => _isScottishTaxpayer;
+            set => SetProperty(ref _isScottishTaxpayer, value);
         }
 
         public ObservableCollection<Employment> Employments { get; set; } = new();

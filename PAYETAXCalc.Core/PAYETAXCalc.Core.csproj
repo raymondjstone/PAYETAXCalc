@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>PAYETAXCalc</RootNamespace>
+  </PropertyGroup>
+
+  <!-- Link source files from the main project (no WinUI dependency needed) -->
+  <ItemGroup>
+    <Compile Include="..\Helpers\NotifyBase.cs" Link="Helpers\NotifyBase.cs" />
+    <Compile Include="..\Models\Employment.cs" Link="Models\Employment.cs" />
+    <Compile Include="..\Models\SavingsIncome.cs" Link="Models\SavingsIncome.cs" />
+    <Compile Include="..\Models\TaxYearData.cs" Link="Models\TaxYearData.cs" />
+    <Compile Include="..\Models\TaxYearRules.cs" Link="Models\TaxYearRules.cs" />
+    <Compile Include="..\Models\TaxCalculationResult.cs" Link="Models\TaxCalculationResult.cs" />
+    <Compile Include="..\Models\WindowSettings.cs" Link="Models\WindowSettings.cs" />
+    <Compile Include="..\Services\TaxCalculator.cs" Link="Services\TaxCalculator.cs" />
+    <Compile Include="..\Services\TaxRulesProvider.cs" Link="Services\TaxRulesProvider.cs" />
+    <Compile Include="..\Services\DataService.cs" Link="Services\DataService.cs" />
+  </ItemGroup>
+
+</Project>

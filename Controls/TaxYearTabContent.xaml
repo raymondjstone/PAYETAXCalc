@@ -233,6 +233,9 @@
                     <CheckBox x:Name="BlindPersonCheck" Content="Claim Blind Person's Allowance"
                               IsChecked="{Binding ClaimBlindPersonsAllowance, Mode=TwoWay}"/>
 
+                    <CheckBox x:Name="ScottishTaxpayerCheck" Content="Scottish Taxpayer (use Scottish income tax rates)"
+                              IsChecked="{Binding IsScottishTaxpayer, Mode=TwoWay}"/>
+
                     <NumberBox x:Name="GiftAidBox" Header="Gift Aid Donations in this tax year (£)"
                                Value="{Binding GiftAidDonations, Mode=TwoWay}"
                                SpinButtonPlacementMode="Compact" SmallChange="10" LargeChange="100"
@@ -307,27 +310,20 @@
 
                     <Border Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="0,6"/>
 
-                    <!-- Tax Breakdown -->
-                    <TextBlock Text="Income Tax Breakdown" FontWeight="SemiBold" Margin="0,4,0,4"/>
-                    <Grid ColumnDefinitions="*,Auto,Auto">
-                        <TextBlock Text="Basic Rate (20%):"/>
-                        <TextBlock x:Name="ResBasicIncome" Grid.Column="1" Margin="0,0,20,0" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                        <TextBlock x:Name="ResBasicTax" Grid.Column="2" FontWeight="SemiBold"/>
-                    </Grid>
-                    <Grid ColumnDefinitions="*,Auto,Auto">
-                        <TextBlock Text="Higher Rate (40%):"/>
-                        <TextBlock x:Name="ResHigherIncome" Grid.Column="1" Margin="0,0,20,0" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                        <TextBlock x:Name="ResHigherTax" Grid.Column="2" FontWeight="SemiBold"/>
-                    </Grid>
-                    <Grid ColumnDefinitions="*,Auto,Auto">
-                        <TextBlock Text="Additional Rate (45%):"/>
-                        <TextBlock x:Name="ResAdditionalIncome" Grid.Column="1" Margin="0,0,20,0" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                        <TextBlock x:Name="ResAdditionalTax" Grid.Column="2" FontWeight="SemiBold"/>
-                    </Grid>
-                    <Grid x:Name="ResSavingsTaxRow" ColumnDefinitions="*,Auto" Visibility="Collapsed">
-                        <TextBlock Text="Tax on Savings:"/>
-                        <TextBlock x:Name="ResSavingsTax" Grid.Column="1" FontWeight="SemiBold"/>
-                    </Grid>
+                    <!-- Tax Breakdown (dynamic - supports Scottish and rUK bands) -->
+                    <TextBlock x:Name="ResTaxBreakdownHeader" Text="Income Tax Breakdown" FontWeight="SemiBold" Margin="0,4,0,4"/>
+                    <ItemsControl x:Name="TaxBreakdownItems">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid ColumnDefinitions="*,Auto,Auto" Margin="0,0,0,2">
+                                    <TextBlock Text="{Binding Label}"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding IncomeText}" Margin="0,0,20,0"
+                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                    <TextBlock Grid.Column="2" Text="{Binding TaxText}" FontWeight="SemiBold"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
 
                     <Border Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="0,6"/>
 

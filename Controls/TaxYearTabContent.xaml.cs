@@ -29,6 +29,7 @@ namespace PAYETAXCalc.Controls
 
             MarriageAllowanceCheck.IsChecked = data.ClaimMarriageAllowance;
             BlindPersonCheck.IsChecked = data.ClaimBlindPersonsAllowance;
+            ScottishTaxpayerCheck.IsChecked = data.IsScottishTaxpayer;
             GiftAidBox.Value = data.GiftAidDonations;
 
             if (data.IsMarriageAllowanceReceiver)
@@ -58,6 +59,7 @@ namespace PAYETAXCalc.Controls
             TaxYearData.ClaimMarriageAllowance = MarriageAllowanceCheck.IsChecked == true;
             TaxYearData.IsMarriageAllowanceReceiver = MAReceiver.IsChecked == true;
             TaxYearData.ClaimBlindPersonsAllowance = BlindPersonCheck.IsChecked == true;
+            TaxYearData.IsScottishTaxpayer = ScottishTaxpayerCheck.IsChecked == true;
             TaxYearData.GiftAidDonations = double.IsNaN(GiftAidBox.Value) ? 0 : GiftAidBox.Value;
         }
 
@@ -172,22 +174,10 @@ namespace PAYETAXCalc.Controls
                 ResMarriageRow.Visibility = Visibility.Collapsed;
             }
 
-            ResBasicIncome.Text = $"on £{r.IncomeAtBasicRate:N2}";
-            ResBasicTax.Text = $"£{r.TaxAtBasicRate:N2}";
-            ResHigherIncome.Text = $"on £{r.IncomeAtHigherRate:N2}";
-            ResHigherTax.Text = $"£{r.TaxAtHigherRate:N2}";
-            ResAdditionalIncome.Text = $"on £{r.IncomeAtAdditionalRate:N2}";
-            ResAdditionalTax.Text = $"£{r.TaxAtAdditionalRate:N2}";
-
-            if (r.SavingsTaxDue > 0)
-            {
-                ResSavingsTaxRow.Visibility = Visibility.Visible;
-                ResSavingsTax.Text = $"£{r.SavingsTaxDue:N2}";
-            }
-            else
-            {
-                ResSavingsTaxRow.Visibility = Visibility.Collapsed;
-            }
+            // Dynamic tax breakdown (supports both Scottish and rUK bands)
+            string regime = TaxYearData?.IsScottishTaxpayer == true ? "Scottish" : "rUK";
+            ResTaxBreakdownHeader.Text = $"Income Tax Breakdown ({regime} rates)";
+            TaxBreakdownItems.ItemsSource = r.TaxBreakdown;
 
             ResTotalTaxDue.Text = $"£{r.TotalIncomeTaxDue:N2}";
             ResTotalTaxPaid.Text = $"£{r.TotalTaxPaidViaPAYE:N2}";

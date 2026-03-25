@@ -115,6 +115,7 @@ namespace PAYETAXCalc.Services
                 newYear.ClaimMarriageAllowance = previousYear.ClaimMarriageAllowance;
                 newYear.IsMarriageAllowanceReceiver = previousYear.IsMarriageAllowanceReceiver;
                 newYear.ClaimBlindPersonsAllowance = previousYear.ClaimBlindPersonsAllowance;
+                newYear.IsScottishTaxpayer = previousYear.IsScottishTaxpayer;
             }
 
             // Ensure at least one employment entry

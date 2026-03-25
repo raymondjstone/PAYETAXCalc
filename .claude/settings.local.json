@@ -1,7 +1,11 @@
 {
   "permissions": {
     "allow": [
-      "Bash(dotnet build:*)"
+      "Bash(dotnet build:*)",
+      "Bash(ls /c/Code/PAYETAXCalc/*.sln)",
+      "Bash(dotnet test:*)",
+      "Bash(dotnet --info)",
+      "Bash(dotnet clean:*)"
     ]
   }
 }

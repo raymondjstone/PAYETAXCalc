@@ -10,4 +10,6 @@
     <Platform Solution="*|x86" Project="x86" />
     <Deploy />
   </Project>
+  <Project Path="PAYETAXCalc.Core\PAYETAXCalc.Core.csproj" />
+  <Project Path="PAYETAXCalc.Tests\PAYETAXCalc.Tests.csproj" />
 </Solution>
