@@ -99,7 +99,7 @@
                                                    SpinButtonPlacementMode="Compact" SmallChange="100" LargeChange="1000"
                                                    Margin="0,0,8,8" Minimum="0"/>
                                         <TextBlock Grid.Column="1" VerticalAlignment="Center" Margin="0,16,0,0"
-                                                   Text="Employee contributions not already deducted from gross salary"
+                                                   Text="Workplace pension contributions (Net Pay/AVC) - get full tax relief via PAYE"
                                                    TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                                                    Style="{ThemeResource CaptionTextBlockStyle}"/>
                                     </Grid>
@@ -240,6 +240,27 @@
                                Value="{Binding GiftAidDonations, Mode=TwoWay}"
                                SpinButtonPlacementMode="Compact" SmallChange="10" LargeChange="100"
                                Minimum="0" MaxWidth="300" HorizontalAlignment="Left"/>
+
+                    <!-- Pension Tax Credit Section -->
+                    <Border Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="0,8,0,8"/>
+                    <TextBlock Text="Personal Pension Tax Credit" Style="{ThemeResource BodyStrongTextBlockStyle}"/>
+                    <TextBlock Text="💡 Different from workplace pensions above! This is for personal pensions (SIPPs, stakeholder pensions) paid from your bank account."
+                               Foreground="{ThemeResource SystemFillColorCautionBrush}"
+                               Style="{ThemeResource CaptionTextBlockStyle}" TextWrapping="Wrap"
+                               Margin="0,4,0,8"/>
+                    <NumberBox x:Name="ReliefAtSourceBox" Header="Personal Pension Contributions - Net Amount Paid (£)"
+                               Value="{Binding ReliefAtSourcePensionContributions, Mode=TwoWay}"
+                               SpinButtonPlacementMode="Compact" SmallChange="100" LargeChange="1000"
+                               Minimum="0" MaxWidth="300" HorizontalAlignment="Left"
+                               PlaceholderText="Amount you paid from your bank account"/>
+                    <TextBlock TextWrapping="Wrap" Margin="0,4,0,0"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                               Style="{ThemeResource CaptionTextBlockStyle}">
+                        <Run Text="Enter the amount YOU paid into personal pensions (the amount that left your bank account)."/><LineBreak/>
+                        <Run Text="• Your pension provider already adds 20% basic rate relief automatically"/><LineBreak/>
+                        <Run Text="• Higher rate (40%) and additional rate (45%) taxpayers can claim back extra relief"/><LineBreak/>
+                        <Run Text="• Do NOT include workplace pension contributions (enter those above under each employment)"/>
+                    </TextBlock>
                 </StackPanel>
             </Border>
 
@@ -355,6 +376,30 @@
                         <TextBlock Text="Expected NI:"/>
                         <TextBlock x:Name="ResExpectedNI" Grid.Column="1"/>
                     </Grid>
+
+                    <!-- Pension Tax Credit Section -->
+                    <Border x:Name="ResPensionTaxCreditSection" Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="0,8" Visibility="Collapsed"/>
+                    <StackPanel x:Name="ResPensionTaxCreditPanel" Visibility="Collapsed" Spacing="4">
+                        <TextBlock Text="Pension Tax Credit" FontWeight="SemiBold" Margin="0,4,0,4"/>
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBlock Text="Relief at Source Contributions:"/>
+                            <TextBlock x:Name="ResReliefAtSource" Grid.Column="1"/>
+                        </Grid>
+                        <Grid x:Name="ResPensionCreditRow" ColumnDefinitions="*,Auto" Visibility="Collapsed">
+                            <TextBlock Text="Additional Tax Relief Claimable:" Foreground="{ThemeResource SystemFillColorSuccessBrush}" FontWeight="SemiBold"/>
+                            <TextBlock x:Name="ResPensionCredit" Grid.Column="1" Foreground="{ThemeResource SystemFillColorSuccessBrush}" FontWeight="SemiBold"/>
+                        </Grid>
+                        <Expander x:Name="ResPensionCreditExpander" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Margin="0,4,0,0">
+                            <Expander.Header>
+                                <TextBlock Text="View Details &amp; How to Claim" Style="{ThemeResource BodyTextBlockStyle}"/>
+                            </Expander.Header>
+                            <Expander.Content>
+                                <TextBlock x:Name="ResPensionCreditInfo" TextWrapping="Wrap" 
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                           Style="{ThemeResource BodyTextBlockStyle}" Padding="0,8"/>
+                            </Expander.Content>
+                        </Expander>
+                    </StackPanel>
 
                     <!-- Summary -->
                     <InfoBar x:Name="ResultInfoBar" IsOpen="True" IsClosable="False" Margin="0,12,0,0"/>

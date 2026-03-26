@@ -830,4 +830,126 @@ public class TaxCalculatorTests
         Assert.True(result.TotalIncomeTaxDue > 0);
         Assert.Contains(result.TaxBreakdown, b => b.Label.Contains("Starter"));
     }
+
+    // ═══════════ Pension Tax Credit (Relief at Source) ═══════════
+
+    [Fact]
+    public void No_Relief_At_Source_No_Pension_Tax_Credit()
+    {
+        var data = MakeData(50000);
+        var result = TaxCalculator.Calculate(data, Rules202425);
+
+        Assert.False(result.CanClaimPensionTaxCredit);
+        Assert.Equal(0m, result.PensionTaxCreditClaimable);
+        Assert.Equal(0m, result.ReliefAtSourceContributions);
+    }
+
+    [Fact]
+    public void Basic_Rate_Taxpayer_No_Additional_Relief()
+    {
+        // £30,000 salary = basic rate taxpayer
+        var data = MakeData(30000);
+        data.ReliefAtSourcePensionContributions = 1000;
+        var result = TaxCalculator.Calculate(data, Rules202425);
+
+        Assert.Equal(1000m, result.ReliefAtSourceContributions);
+        Assert.False(result.CanClaimPensionTaxCredit);
+        Assert.Equal(0m, result.PensionTaxCreditClaimable);
+        Assert.Contains("basic rate taxpayer", result.PensionTaxCreditInfo, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Higher_Rate_Taxpayer_Gets_Additional_Relief()
+    {
+        // £70,000 salary = higher rate taxpayer (40%)
+        var data = MakeData(70000);
+        data.ReliefAtSourcePensionContributions = 800; // Net contribution
+        var result = TaxCalculator.Calculate(data, Rules202425);
+
+        // Gross = 800 / 0.80 = 1000
+        // Basic rate relief already received = 1000 * 0.20 = 200
+        // Additional relief at 40% - 20% = 20% on gross = 1000 * 0.20 = 200
+        decimal expectedCredit = (800m / 0.80m) * 0.20m;
+
+        Assert.True(result.CanClaimPensionTaxCredit);
+        Assert.Equal(expectedCredit, result.PensionTaxCreditClaimable);
+        Assert.Contains("higher rate", result.PensionTaxCreditInfo, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Additional_Rate_Taxpayer_Gets_More_Relief()
+    {
+        // £160,000 salary = additional rate taxpayer (45%)
+        var data = MakeData(160000);
+        data.ReliefAtSourcePensionContributions = 4000; // Net contribution
+        var result = TaxCalculator.Calculate(data, Rules202425);
+
+        // Gross = 4000 / 0.80 = 5000
+        // Additional relief at 45% - 20% = 25% on gross = 5000 * 0.25 = 1250
+        decimal expectedCredit = (4000m / 0.80m) * 0.25m;
+
+        Assert.True(result.CanClaimPensionTaxCredit);
+        Assert.Equal(expectedCredit, result.PensionTaxCreditClaimable);
+        Assert.Contains("additional rate", result.PensionTaxCreditInfo, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Pension_Tax_Credit_Info_Contains_Gross_Contribution()
+    {
+        var data = MakeData(70000);
+        data.ReliefAtSourcePensionContributions = 800;
+        var result = TaxCalculator.Calculate(data, Rules202425);
+
+        Assert.Contains("£1,000.00", result.PensionTaxCreditInfo); // Gross contribution
+        Assert.Contains("Gross Contribution", result.PensionTaxCreditInfo);
+    }
+
+    [Fact]
+    public void Pension_Tax_Credit_Info_Contains_Claim_Instructions()
+    {
+        var data = MakeData(70000);
+        data.ReliefAtSourcePensionContributions = 800;
+        var result = TaxCalculator.Calculate(data, Rules202425);
+
+        Assert.Contains("HOW TO CLAIM", result.PensionTaxCreditInfo);
+        Assert.Contains("Self Assessment", result.PensionTaxCreditInfo);
+    }
+
+    [Fact]
+    public void Pension_Tax_Credit_Warns_About_Annual_Allowance()
+    {
+        // £50,000 net contribution would gross up to £62,500 which exceeds £60,000 allowance
+        var data = MakeData(100000);
+        data.ReliefAtSourcePensionContributions = 50000;
+        var result = TaxCalculator.Calculate(data, Rules202425);
+
+        Assert.Contains("Annual Allowance", result.PensionTaxCreditInfo);
+        Assert.Contains("WARNING", result.PensionTaxCreditInfo);
+    }
+
+    [Fact]
+    public void Pension_Tax_Credit_Added_To_Summary_For_Higher_Rate()
+    {
+        var data = MakeData(70000);
+        data.ReliefAtSourcePensionContributions = 800;
+        var result = TaxCalculator.Calculate(data, Rules202425);
+
+        Assert.Contains("PENSION TAX CREDIT", result.Summary);
+    }
+
+    [Fact]
+    public void Scottish_Higher_Rate_Taxpayer_Gets_Correct_Relief()
+    {
+        // Scottish higher rate is 42% not 40%
+        var data = MakeData(70000, scottish: true);
+        data.ReliefAtSourcePensionContributions = 800;
+        var result = TaxCalculator.Calculate(data, Rules202425);
+
+        // Gross = 800 / 0.80 = 1000
+        // Scottish intermediate is 21%, higher is 42%
+        // At £70,000 taxable = £57,430, which is in Scottish higher rate band
+        // Additional relief should be at higher rate - basic rate
+        Assert.True(result.CanClaimPensionTaxCredit);
+        Assert.True(result.PensionTaxCreditClaimable > 0);
+    }
 }

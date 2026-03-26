@@ -11,6 +11,7 @@ namespace PAYETAXCalc.Models
         private bool _isMarriageAllowanceReceiver;
         private bool _claimBlindPersonsAllowance;
         private double _giftAidDonations;
+        private double _reliefAtSourcePensionContributions;
 
         public string TaxYear
         {
@@ -49,6 +50,16 @@ namespace PAYETAXCalc.Models
         {
             get => _giftAidDonations;
             set => SetProperty(ref _giftAidDonations, double.IsNaN(value) ? 0 : value);
+        }
+
+        /// <summary>
+        /// Pension contributions made via Relief at Source schemes (personal pensions, SIPPs).
+        /// These receive automatic basic rate tax relief at source; higher/additional rate relief must be claimed.
+        /// </summary>
+        public double ReliefAtSourcePensionContributions
+        {
+            get => _reliefAtSourcePensionContributions;
+            set => SetProperty(ref _reliefAtSourcePensionContributions, double.IsNaN(value) ? 0 : value);
         }
     }
 }

@@ -32,6 +32,7 @@ namespace PAYETAXCalc.Controls
             BlindPersonCheck.IsChecked = data.ClaimBlindPersonsAllowance;
             ScottishTaxpayerCheck.IsChecked = data.IsScottishTaxpayer;
             GiftAidBox.Value = data.GiftAidDonations;
+            ReliefAtSourceBox.Value = data.ReliefAtSourcePensionContributions;
 
             if (data.IsMarriageAllowanceReceiver)
                 MAReceiver.IsChecked = true;
@@ -55,6 +56,7 @@ namespace PAYETAXCalc.Controls
             TaxYearData.ClaimBlindPersonsAllowance = BlindPersonCheck.IsChecked == true;
             TaxYearData.IsScottishTaxpayer = ScottishTaxpayerCheck.IsChecked == true;
             TaxYearData.GiftAidDonations = double.IsNaN(GiftAidBox.Value) ? 0 : GiftAidBox.Value;
+            TaxYearData.ReliefAtSourcePensionContributions = double.IsNaN(ReliefAtSourceBox.Value) ? 0 : ReliefAtSourceBox.Value;
         }
 
         private void AddEmployment_Click(object sender, RoutedEventArgs e)
@@ -267,6 +269,30 @@ namespace PAYETAXCalc.Controls
 
             ResNIPaid.Text = $"£{r.TotalNIPaid:N2}";
             ResExpectedNI.Text = $"£{r.ExpectedNI:N2}";
+
+            // Pension Tax Credit display
+            if (r.ReliefAtSourceContributions > 0)
+            {
+                ResPensionTaxCreditSection.Visibility = Visibility.Visible;
+                ResPensionTaxCreditPanel.Visibility = Visibility.Visible;
+                ResReliefAtSource.Text = $"£{r.ReliefAtSourceContributions:N2}";
+                ResPensionCreditInfo.Text = r.PensionTaxCreditInfo;
+
+                if (r.CanClaimPensionTaxCredit && r.PensionTaxCreditClaimable > 0)
+                {
+                    ResPensionCreditRow.Visibility = Visibility.Visible;
+                    ResPensionCredit.Text = $"£{r.PensionTaxCreditClaimable:N2}";
+                }
+                else
+                {
+                    ResPensionCreditRow.Visibility = Visibility.Collapsed;
+                }
+            }
+            else
+            {
+                ResPensionTaxCreditSection.Visibility = Visibility.Collapsed;
+                ResPensionTaxCreditPanel.Visibility = Visibility.Collapsed;
+            }
 
             ResultInfoBar.Message = r.Summary;
             if (r.TaxOverUnderPayment > 0)

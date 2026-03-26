@@ -129,6 +129,9 @@ namespace PAYETAXCalc.Services
             }
             result.ExpectedNI = Math.Round(expectedNI, 2);
 
+            // 13a. Pension Tax Credit calculation (Relief at Source contributions)
+            CalculatePensionTaxCredit(data, rules, taxableNonSavings, result);
+
             // 14. Over/under payment
             result.TaxOverUnderPayment = totalTaxDue - totalTaxPaid;
 
@@ -150,6 +153,13 @@ namespace PAYETAXCalc.Services
                 result.Summary += niDiff > 0
                     ? $"\nNI: You paid £{niDiff:N2} more than expected."
                     : $"\nNI: You paid £{Math.Abs(niDiff):N2} less than expected.";
+            }
+
+            // Add pension tax credit info to summary if applicable
+            if (result.CanClaimPensionTaxCredit && result.PensionTaxCreditClaimable > 0)
+            {
+                result.Summary += $"\n\n💰 PENSION TAX CREDIT: You may be able to claim £{result.PensionTaxCreditClaimable:N2} " +
+                    "in additional tax relief on your pension contributions.";
             }
 
             return result;
@@ -351,6 +361,110 @@ namespace PAYETAXCalc.Services
             result.TotalEmploymentExpenses = totalExpenses;
             result.ExpensesBreakdown = expenseLines.Count > 0 ? string.Join("\n", expenseLines) : "";
             return totalExpenses;
+        }
+
+        /// <summary>
+        /// Calculates pension tax credit for Relief at Source pension contributions.
+        /// Higher and additional rate taxpayers can claim back additional tax relief 
+        /// beyond the basic rate relief already applied at source.
+        /// </summary>
+        private static void CalculatePensionTaxCredit(
+            TaxYearData data,
+            TaxYearRules rules,
+            decimal taxableNonSavings,
+            TaxCalculationResult result)
+        {
+            decimal reliefAtSourceContributions = (decimal)data.ReliefAtSourcePensionContributions;
+            result.ReliefAtSourceContributions = reliefAtSourceContributions;
+
+            if (reliefAtSourceContributions <= 0)
+            {
+                result.CanClaimPensionTaxCredit = false;
+                result.PensionTaxCreditClaimable = 0;
+                result.PensionTaxCreditInfo = "";
+                return;
+            }
+
+            // Gross up the contribution (contributions are made net of basic rate tax)
+            decimal grossContribution = reliefAtSourceContributions / (1 - rules.BasicRate);
+
+            // Determine the taxpayer's marginal rate based on taxable income
+            var bands = data.IsScottishTaxpayer ? rules.ScottishBands : rules.RestOfUKBands;
+            decimal marginalRate = rules.BasicRate;
+            decimal remainingIncome = taxableNonSavings;
+
+            foreach (var band in bands)
+            {
+                if (remainingIncome <= 0) break;
+
+                decimal bandWidth = band.UpperGrossThreshold > 0
+                    ? band.UpperGrossThreshold - rules.PersonalAllowance
+                    : decimal.MaxValue;
+
+                if (remainingIncome > bandWidth)
+                {
+                    remainingIncome -= bandWidth;
+                }
+                else
+                {
+                    marginalRate = band.Rate;
+                    break;
+                }
+            }
+
+            // Calculate additional relief available
+            // Basic rate relief is already received at source (20%)
+            // Higher/additional rate taxpayers can claim the difference
+            decimal additionalReliefRate = marginalRate - rules.BasicRate;
+            decimal claimableCredit = 0;
+            var infoLines = new List<string>();
+
+            infoLines.Add($"Relief at Source Contributions: £{reliefAtSourceContributions:N2} (net)");
+            infoLines.Add($"Gross Contribution: £{grossContribution:N2}");
+            infoLines.Add($"Basic Rate Relief (received at source): £{grossContribution * rules.BasicRate:N2}");
+
+            if (additionalReliefRate > 0)
+            {
+                claimableCredit = grossContribution * additionalReliefRate;
+                result.CanClaimPensionTaxCredit = true;
+
+                string rateDescription = marginalRate == rules.HigherRate ? "higher rate" :
+                    marginalRate == rules.AdditionalRate ? "additional rate" : $"{marginalRate * 100:N0}%";
+
+                infoLines.Add($"");
+                infoLines.Add($"📋 ELIGIBILITY CHECK: PASSED");
+                infoLines.Add($"Your marginal tax rate: {marginalRate * 100:N0}% ({rateDescription})");
+                infoLines.Add($"Additional relief rate: {additionalReliefRate * 100:N0}%");
+                infoLines.Add($"Additional tax relief claimable: £{claimableCredit:N2}");
+                infoLines.Add($"");
+                infoLines.Add($"ℹ️ HOW TO CLAIM:");
+                infoLines.Add($"• Complete a Self Assessment tax return, or");
+                infoLines.Add($"• Contact HMRC to adjust your tax code, or");
+                infoLines.Add($"• Write to HMRC with pension contribution evidence");
+                infoLines.Add($"");
+                infoLines.Add($"📅 Deadline: 4 years from end of tax year");
+            }
+            else
+            {
+                result.CanClaimPensionTaxCredit = false;
+                infoLines.Add($"");
+                infoLines.Add($"📋 ELIGIBILITY CHECK: Not applicable");
+                infoLines.Add($"As a basic rate taxpayer, you have already received the full tax relief at source.");
+                infoLines.Add($"No additional claim is needed.");
+            }
+
+            // Check annual allowance (simplified check - doesn't account for carry forward)
+            decimal annualAllowance = 60000m; // Standard annual allowance from 2023/24
+            if (grossContribution > annualAllowance)
+            {
+                infoLines.Add($"");
+                infoLines.Add($"⚠️ WARNING: Your gross contributions (£{grossContribution:N2}) exceed the standard");
+                infoLines.Add($"Annual Allowance of £{annualAllowance:N0}. You may be liable to an Annual Allowance charge.");
+                infoLines.Add($"Consider consulting a tax adviser.");
+            }
+
+            result.PensionTaxCreditClaimable = claimableCredit;
+            result.PensionTaxCreditInfo = string.Join("\n", infoLines);
         }
     }
 }

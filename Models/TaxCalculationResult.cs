@@ -31,6 +31,10 @@ namespace PAYETAXCalc.Models
         private string _summary = "";
         private string _expensesBreakdown = "";
         private List<TaxBreakdownLine> _taxBreakdown = new();
+        private decimal _pensionTaxCreditClaimable;
+        private string _pensionTaxCreditInfo = "";
+        private bool _canClaimPensionTaxCredit;
+        private decimal _reliefAtSourceContributions;
 
         public decimal TotalEmploymentIncome { get => _totalEmploymentIncome; set => SetProperty(ref _totalEmploymentIncome, value); }
         public decimal TotalBenefitsInKind { get => _totalBenefitsInKind; set => SetProperty(ref _totalBenefitsInKind, value); }
@@ -59,5 +63,9 @@ namespace PAYETAXCalc.Models
         public string Summary { get => _summary; set => SetProperty(ref _summary, value); }
         public string ExpensesBreakdown { get => _expensesBreakdown; set => SetProperty(ref _expensesBreakdown, value); }
         public List<TaxBreakdownLine> TaxBreakdown { get => _taxBreakdown; set => SetProperty(ref _taxBreakdown, value); }
+        public decimal PensionTaxCreditClaimable { get => _pensionTaxCreditClaimable; set => SetProperty(ref _pensionTaxCreditClaimable, value); }
+        public string PensionTaxCreditInfo { get => _pensionTaxCreditInfo; set => SetProperty(ref _pensionTaxCreditInfo, value); }
+        public bool CanClaimPensionTaxCredit { get => _canClaimPensionTaxCredit; set => SetProperty(ref _canClaimPensionTaxCredit, value); }
+        public decimal ReliefAtSourceContributions { get => _reliefAtSourceContributions; set => SetProperty(ref _reliefAtSourceContributions, value); }
     }
 }
