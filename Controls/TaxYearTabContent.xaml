@@ -5,6 +5,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:PAYETAXCalc.Controls"
     xmlns:converters="using:PAYETAXCalc.Converters"
+    xmlns:nf="using:Windows.Globalization.NumberFormatting"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
@@ -13,6 +14,18 @@
         <converters:BoolToVisibilityConverter x:Key="BoolToVis"/>
         <converters:CurrencyConverter x:Key="CurrencyFmt"/>
         <converters:OverUnderPaymentConverter x:Key="OverUnderFmt"/>
+
+        <!-- Currency formatter with thousand separators and 2 decimal places -->
+        <nf:DecimalFormatter x:Key="CurrencyFormatter" 
+                             FractionDigits="2" 
+                             IntegerDigits="1"
+                             IsGrouped="True"/>
+
+        <!-- Whole number formatter with thousand separators -->
+        <nf:DecimalFormatter x:Key="WholeNumberFormatter" 
+                             FractionDigits="0" 
+                             IntegerDigits="1"
+                             IsGrouped="True"/>
     </UserControl.Resources>
 
     <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="24,16,24,24">
@@ -68,10 +81,12 @@
                                 <Grid ColumnDefinitions="*,*,Auto">
                                     <NumberBox Header="Gross Income (£)"
                                                Value="{Binding GrossSalary, Mode=TwoWay}"
+                                               NumberFormatter="{StaticResource CurrencyFormatter}"
                                                SpinButtonPlacementMode="Compact" SmallChange="100" LargeChange="1000"
                                                Margin="0,0,8,8" Minimum="0"/>
                                     <NumberBox Grid.Column="1" Header="Tax Paid (£)"
                                                Value="{Binding TaxPaid, Mode=TwoWay}"
+                                               NumberFormatter="{StaticResource CurrencyFormatter}"
                                                SpinButtonPlacementMode="Compact" SmallChange="100" LargeChange="1000"
                                                Margin="0,0,8,8" Minimum="0"/>
                                 </Grid>
@@ -84,10 +99,12 @@
                                     <Grid ColumnDefinitions="*,*,Auto">
                                         <NumberBox Header="NI Paid (£)"
                                                    Value="{Binding NationalInsurancePaid, Mode=TwoWay}"
+                                                   NumberFormatter="{StaticResource CurrencyFormatter}"
                                                    SpinButtonPlacementMode="Compact" SmallChange="100" LargeChange="1000"
                                                    Margin="0,0,8,8" Minimum="0"/>
                                         <NumberBox Grid.Column="1" Header="Benefits in Kind (£)"
                                                    Value="{Binding BenefitsInKind, Mode=TwoWay}"
+                                                   NumberFormatter="{StaticResource CurrencyFormatter}"
                                                    SpinButtonPlacementMode="Compact" SmallChange="100" LargeChange="1000"
                                                    Margin="0,0,8,8" Minimum="0"/>
                                     </Grid>
@@ -96,6 +113,7 @@
                                     <Grid ColumnDefinitions="*,*,Auto">
                                         <NumberBox Header="Pension Contributions (£)"
                                                    Value="{Binding PensionContributions, Mode=TwoWay}"
+                                                   NumberFormatter="{StaticResource CurrencyFormatter}"
                                                    SpinButtonPlacementMode="Compact" SmallChange="100" LargeChange="1000"
                                                    Margin="0,0,8,8" Minimum="0"/>
                                         <TextBlock Grid.Column="1" VerticalAlignment="Center" Margin="0,16,0,0"
@@ -117,11 +135,13 @@
                                                 <Grid ColumnDefinitions="*,*">
                                                     <NumberBox Header="Working from Home (weeks)"
                                                                Value="{Binding WorkFromHomeWeeks, Mode=TwoWay}"
+                                                               NumberFormatter="{StaticResource WholeNumberFormatter}"
                                                                SpinButtonPlacementMode="Compact" SmallChange="1" LargeChange="4"
                                                                Margin="0,0,8,8" Minimum="0" Maximum="52"
                                                                PlaceholderText="HMRC flat rate per week"/>
                                                     <NumberBox Grid.Column="1" Header="Business Miles (total)"
                                                                Value="{Binding BusinessMiles, Mode=TwoWay}"
+                                                               NumberFormatter="{StaticResource WholeNumberFormatter}"
                                                                SpinButtonPlacementMode="Compact" SmallChange="100" LargeChange="1000"
                                                                Margin="0,0,0,8" Minimum="0"
                                                                PlaceholderText="AMAP rate applied automatically"/>
@@ -135,11 +155,13 @@
                                                 <Grid ColumnDefinitions="*,*">
                                                     <NumberBox Header="Professional Subscriptions (£)"
                                                                Value="{Binding ProfessionalSubscriptions, Mode=TwoWay}"
+                                                               NumberFormatter="{StaticResource CurrencyFormatter}"
                                                                SpinButtonPlacementMode="Compact" SmallChange="10" LargeChange="50"
                                                                Margin="0,0,8,8" Minimum="0"
                                                                PlaceholderText="HMRC-approved bodies only"/>
                                                     <NumberBox Grid.Column="1" Header="Uniform/Work Clothing (£)"
                                                                Value="{Binding UniformAllowance, Mode=TwoWay}"
+                                                               NumberFormatter="{StaticResource CurrencyFormatter}"
                                                                SpinButtonPlacementMode="Compact" SmallChange="10" LargeChange="50"
                                                                Margin="0,0,0,8" Minimum="0"
                                                                PlaceholderText="Flat rate or actual cost"/>
@@ -153,6 +175,7 @@
                                                 <Grid ColumnDefinitions="*,*">
                                                     <NumberBox Header="Other Allowable Expenses (£)"
                                                                Value="{Binding OtherExpenses, Mode=TwoWay}"
+                                                               NumberFormatter="{StaticResource CurrencyFormatter}"
                                                                SpinButtonPlacementMode="Compact" SmallChange="10" LargeChange="100"
                                                                Margin="0,0,8,8" Minimum="0"/>
                                                     <TextBox Grid.Column="1" Header="Description"
@@ -201,6 +224,7 @@
                                          Margin="0,0,8,8" MinWidth="200"/>
                                 <NumberBox Grid.Column="1" Header="Interest Earned (£)"
                                            Value="{Binding InterestAmount, Mode=TwoWay}"
+                                           NumberFormatter="{StaticResource CurrencyFormatter}"
                                            SpinButtonPlacementMode="Compact" SmallChange="10" LargeChange="100"
                                            Margin="0,0,8,8" Minimum="0"/>
                                 <Button Grid.Column="2" VerticalAlignment="Top" Margin="0,20,0,0"
@@ -238,6 +262,7 @@
 
                     <NumberBox x:Name="GiftAidBox" Header="Gift Aid Donations in this tax year (£)"
                                Value="{Binding GiftAidDonations, Mode=TwoWay}"
+                               NumberFormatter="{StaticResource CurrencyFormatter}"
                                SpinButtonPlacementMode="Compact" SmallChange="10" LargeChange="100"
                                Minimum="0" MaxWidth="300" HorizontalAlignment="Left"/>
 
@@ -250,6 +275,7 @@
                                Margin="0,4,0,8"/>
                     <NumberBox x:Name="ReliefAtSourceBox" Header="Personal Pension Contributions - Net Amount Paid (£)"
                                Value="{Binding ReliefAtSourcePensionContributions, Mode=TwoWay}"
+                               NumberFormatter="{StaticResource CurrencyFormatter}"
                                SpinButtonPlacementMode="Compact" SmallChange="100" LargeChange="1000"
                                Minimum="0" MaxWidth="300" HorizontalAlignment="Left"
                                PlaceholderText="Amount you paid from your bank account"/>
