@@ -27,6 +27,7 @@ namespace PAYETAXCalc.Controls
 
             EmploymentsPanel.ItemsSource = data.Employments;
             SavingsPanel.ItemsSource = data.SavingsIncomes;
+            DividendsPanel.ItemsSource = data.DividendIncomes;
 
             MarriageAllowanceCheck.IsChecked = data.ClaimMarriageAllowance;
             BlindPersonCheck.IsChecked = data.ClaimBlindPersonsAllowance;
@@ -85,6 +86,21 @@ namespace PAYETAXCalc.Controls
             if (sender is Button btn && btn.DataContext is SavingsIncome sav && TaxYearData != null)
             {
                 TaxYearData.SavingsIncomes.Remove(sav);
+                DataChanged?.Invoke(this, EventArgs.Empty);
+            }
+        }
+
+        private void AddDividend_Click(object sender, RoutedEventArgs e)
+        {
+            TaxYearData?.DividendIncomes.Add(new DividendIncome());
+            DataChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        private void RemoveDividend_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button btn && btn.DataContext is DividendIncome div && TaxYearData != null)
+            {
+                TaxYearData.DividendIncomes.Remove(div);
                 DataChanged?.Invoke(this, EventArgs.Empty);
             }
         }
@@ -214,6 +230,17 @@ namespace PAYETAXCalc.Controls
 
             ResSavings.Text = $"£{r.TotalSavingsInterest:N2}";
             ResTaxFreeSavings.Text = $"£{r.TotalTaxFreeSavings:N2}";
+
+            if (r.TotalDividendIncome > 0)
+            {
+                ResDividendRow.Visibility = Visibility.Visible;
+                ResDividends.Text = $"£{r.TotalDividendIncome:N2}";
+            }
+            else
+            {
+                ResDividendRow.Visibility = Visibility.Collapsed;
+            }
+
             ResGross.Text = $"£{r.GrossIncome:N2}";
             ResPA.Text = $"£{r.PersonalAllowanceUsed:N2}";
 

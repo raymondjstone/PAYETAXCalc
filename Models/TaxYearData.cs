@@ -27,6 +27,7 @@ namespace PAYETAXCalc.Models
 
         public ObservableCollection<Employment> Employments { get; set; } = new();
         public ObservableCollection<SavingsIncome> SavingsIncomes { get; set; } = new();
+        public ObservableCollection<DividendIncome> DividendIncomes { get; set; } = new();
 
         public bool ClaimMarriageAllowance
         {

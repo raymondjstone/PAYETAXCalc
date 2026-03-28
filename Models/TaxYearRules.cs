@@ -55,8 +55,11 @@ namespace PAYETAXCalc.Models
         // Blind Person's Allowance
         public decimal BlindPersonsAllowance { get; set; }
 
-        // Dividend Allowance
+        // Dividend Allowance and Rates
         public decimal DividendAllowance { get; set; }
+        public decimal DividendBasicRate { get; set; }
+        public decimal DividendHigherRate { get; set; }
+        public decimal DividendAdditionalRate { get; set; }
 
         // HMRC Flat Rate Expenses
         public decimal WorkFromHomeWeeklyRate { get; set; }

@@ -202,6 +202,25 @@ public class DataServiceTests
         Assert.Equal("", result.Employments[0].EmployerName);
     }
 
+    [Fact]
+    public void CreateNewTaxYear_Carries_Forward_Dividends()
+    {
+        var prev = new TaxYearData { TaxYear = "2023/24" };
+        prev.DividendIncomes.Add(new DividendIncome
+        {
+            CompanyName = "Big Corp plc",
+            GrossDividend = 5000,
+            TaxPaid = 200,
+        });
+
+        var result = DataService.CreateNewTaxYear("2024/25", prev);
+
+        Assert.Single(result.DividendIncomes);
+        Assert.Equal("Big Corp plc", result.DividendIncomes[0].CompanyName);
+        Assert.Equal(0, result.DividendIncomes[0].GrossDividend);
+        Assert.Equal(0, result.DividendIncomes[0].TaxPaid);
+    }
+
     // ═══════════ Save and Load round-trip ═══════════
 
     [Fact]

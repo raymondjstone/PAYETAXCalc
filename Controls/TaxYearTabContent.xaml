@@ -240,6 +240,51 @@
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
 
+            <!-- ═══════════ DIVIDENDS ═══════════ -->
+            <Grid Margin="0,8,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="Dividend Income" Style="{ThemeResource SubtitleTextBlockStyle}" VerticalAlignment="Center"/>
+                <Button Grid.Column="1" Click="AddDividend_Click" Style="{ThemeResource AccentButtonStyle}">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <FontIcon Glyph="&#xE710;" FontSize="14"/>
+                        <TextBlock Text="Add Dividend Source"/>
+                    </StackPanel>
+                </Button>
+            </Grid>
+
+            <ItemsControl x:Name="DividendsPanel">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Margin="0,0,0,8" Padding="16" CornerRadius="8"
+                                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1">
+                            <Grid ColumnDefinitions="*,*,*,Auto">
+                                <TextBox Header="Company / Fund Name"
+                                         Text="{Binding CompanyName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                         Margin="0,0,8,0" MinWidth="160"/>
+                                <NumberBox Grid.Column="1" Header="Gross Dividend (£)"
+                                           Value="{Binding GrossDividend, Mode=TwoWay}"
+                                           NumberFormatter="{StaticResource CurrencyFormatter}"
+                                           SpinButtonPlacementMode="Compact" SmallChange="10" LargeChange="100"
+                                           Margin="0,0,8,0" Minimum="0"/>
+                                <NumberBox Grid.Column="2" Header="Tax Paid / Withheld (£)"
+                                           Value="{Binding TaxPaid, Mode=TwoWay}"
+                                           NumberFormatter="{StaticResource CurrencyFormatter}"
+                                           SpinButtonPlacementMode="Compact" SmallChange="10" LargeChange="100"
+                                           Margin="0,0,8,0" Minimum="0"/>
+                                <Button Grid.Column="3" VerticalAlignment="Top" Margin="0,20,0,0"
+                                        Click="RemoveDividend_Click" ToolTipService.ToolTip="Remove dividend source">
+                                    <FontIcon Glyph="&#xE74D;" FontSize="14" Foreground="{ThemeResource SystemFillColorCriticalBrush}"/>
+                                </Button>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
             <!-- ═══════════ OTHER DETAILS ═══════════ -->
             <TextBlock Text="Other Details" Style="{ThemeResource SubtitleTextBlockStyle}" Margin="0,8,0,0"/>
             <Border Padding="16" CornerRadius="8"
@@ -334,6 +379,10 @@
                     <Grid ColumnDefinitions="*,Auto" Visibility="{Binding TotalTaxFreeSavings, Converter={StaticResource BoolToVis}, FallbackValue=Collapsed}">
                         <TextBlock Text="Tax-Free Savings (ISA):" Foreground="{ThemeResource SystemFillColorSuccessBrush}"/>
                         <TextBlock x:Name="ResTaxFreeSavings" Grid.Column="1" Foreground="{ThemeResource SystemFillColorSuccessBrush}"/>
+                    </Grid>
+                    <Grid x:Name="ResDividendRow" ColumnDefinitions="*,Auto" Visibility="Collapsed">
+                        <TextBlock Text="Dividend Income:"/>
+                        <TextBlock x:Name="ResDividends" Grid.Column="1" FontWeight="SemiBold"/>
                     </Grid>
 
                     <Border Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="0,6"/>

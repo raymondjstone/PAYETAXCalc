@@ -332,6 +332,64 @@ public class TaxRulesProviderTests
         Assert.Equal(0.25m, rules.MileageRateOver10000);
     }
 
+    // ═══════════ Dividend rates ═══════════
+
+    [Theory]
+    [InlineData("2023/24")]
+    [InlineData("2024/25")]
+    [InlineData("2025/26")]
+    public void Dividend_Basic_Rate_Is_8_75(string year)
+    {
+        var rules = TaxRulesProvider.GetRules(year)!;
+        Assert.Equal(0.0875m, rules.DividendBasicRate);
+    }
+
+    [Theory]
+    [InlineData("2023/24")]
+    [InlineData("2024/25")]
+    [InlineData("2025/26")]
+    public void Dividend_Higher_Rate_Is_33_75(string year)
+    {
+        var rules = TaxRulesProvider.GetRules(year)!;
+        Assert.Equal(0.3375m, rules.DividendHigherRate);
+    }
+
+    [Theory]
+    [InlineData("2023/24")]
+    [InlineData("2024/25")]
+    [InlineData("2025/26")]
+    public void Dividend_Additional_Rate_Is_39_35(string year)
+    {
+        var rules = TaxRulesProvider.GetRules(year)!;
+        Assert.Equal(0.3935m, rules.DividendAdditionalRate);
+    }
+
+    [Fact]
+    public void Dividend_Allowance_202324_Is_1000()
+    {
+        var rules = TaxRulesProvider.GetRules("2023/24")!;
+        Assert.Equal(1000m, rules.DividendAllowance);
+    }
+
+    [Theory]
+    [InlineData("2024/25")]
+    [InlineData("2025/26")]
+    public void Dividend_Allowance_202425_Onwards_Is_500(string year)
+    {
+        var rules = TaxRulesProvider.GetRules(year)!;
+        Assert.Equal(500m, rules.DividendAllowance);
+    }
+
+    [Fact]
+    public void Estimated_Rules_Clone_Dividend_Rates()
+    {
+        var rules = TaxRulesProvider.GetOrEstimateRules("2030/31");
+        Assert.Equal(0.0875m, rules.DividendBasicRate);
+        Assert.Equal(0.3375m, rules.DividendHigherRate);
+        Assert.Equal(0.3935m, rules.DividendAdditionalRate);
+        Assert.True(rules.DividendAllowance > 0);
+    }
+
     [Fact]
     public void GetRulesSummary_Returns_NonEmpty_String()
     {

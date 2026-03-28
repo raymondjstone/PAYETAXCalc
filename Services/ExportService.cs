@@ -126,6 +126,34 @@ namespace PAYETAXCalc.Services
                 wsSav.Columns().AdjustToContents();
             }
 
+            // Dividends sheet
+            if (data.DividendIncomes.Count > 0)
+            {
+                var wsDiv = wb.Worksheets.Add("Dividends");
+                wsDiv.Cell(1, 1).Value = "Dividend Income";
+                wsDiv.Cell(1, 1).Style.Font.Bold = true;
+                wsDiv.Cell(1, 1).Style.Font.FontSize = 14;
+                wsDiv.Cell(3, 1).Value = "Company / Fund";
+                wsDiv.Cell(3, 2).Value = "Gross Dividend";
+                wsDiv.Cell(3, 3).Value = "Tax Paid";
+                for (int c = 1; c <= 3; c++)
+                {
+                    wsDiv.Cell(3, c).Style.Font.Bold = true;
+                    wsDiv.Cell(3, c).Style.Fill.BackgroundColor = XLColor.LightGray;
+                }
+                int dRow = 4;
+                foreach (var div in data.DividendIncomes)
+                {
+                    wsDiv.Cell(dRow, 1).Value = div.CompanyName;
+                    wsDiv.Cell(dRow, 2).Value = div.GrossDividend;
+                    wsDiv.Cell(dRow, 2).Style.NumberFormat.Format = "£#,##0.00";
+                    wsDiv.Cell(dRow, 3).Value = div.TaxPaid;
+                    wsDiv.Cell(dRow, 3).Style.NumberFormat.Format = "£#,##0.00";
+                    dRow++;
+                }
+                wsDiv.Columns().AdjustToContents();
+            }
+
             // Calculation Results sheet
             var wsRes = wb.Worksheets.Add("Tax Calculation");
             WriteResultsSheet(wsRes, data, rules, result);
@@ -182,6 +210,8 @@ namespace PAYETAXCalc.Services
             AddRow("Taxable Savings Interest", r.TotalSavingsInterest);
             if (r.TotalTaxFreeSavings > 0)
                 AddRow("Tax-Free Savings (ISA)", r.TotalTaxFreeSavings);
+            if (r.TotalDividendIncome > 0)
+                AddRow("Dividend Income", r.TotalDividendIncome);
             AddRow("Gross Taxable Income", r.GrossIncome, bold: true);
             AddRow("Personal Allowance Used", r.PersonalAllowanceUsed);
             if (r.GiftAidExtension > 0)
@@ -313,6 +343,33 @@ namespace PAYETAXCalc.Services
                             });
                         }
 
+                        // Dividends
+                        if (data.DividendIncomes.Count > 0)
+                        {
+                            col.Item().PaddingTop(15).Text("Dividend Income").FontSize(13).Bold();
+                            col.Item().PaddingTop(5).Table(table =>
+                            {
+                                table.ColumnsDefinition(cd =>
+                                {
+                                    cd.RelativeColumn(4);
+                                    cd.RelativeColumn(2);
+                                    cd.RelativeColumn(2);
+                                });
+                                table.Header(h =>
+                                {
+                                    h.Cell().Background(Colors.Grey.Lighten3).Padding(4).Text("Company / Fund").Bold();
+                                    h.Cell().Background(Colors.Grey.Lighten3).Padding(4).AlignRight().Text("Gross Dividend").Bold();
+                                    h.Cell().Background(Colors.Grey.Lighten3).Padding(4).AlignRight().Text("Tax Paid").Bold();
+                                });
+                                foreach (var div in data.DividendIncomes)
+                                {
+                                    table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten2).Padding(3).Text(div.CompanyName);
+                                    table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten2).Padding(3).AlignRight().Text($"£{div.GrossDividend:N2}");
+                                    table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten2).Padding(3).AlignRight().Text($"£{div.TaxPaid:N2}");
+                                }
+                            });
+                        }
+
                         // Results
                         col.Item().PaddingTop(15).Text("Tax Calculation Summary").FontSize(13).Bold();
                         col.Item().PaddingTop(5).Table(table =>
@@ -338,6 +395,8 @@ namespace PAYETAXCalc.Services
                             if (result.TotalEmploymentExpenses > 0)
                                 ResultRow("Allowable Expenses", $"-£{result.TotalEmploymentExpenses:N2}");
                             ResultRow("Taxable Savings Interest", $"£{result.TotalSavingsInterest:N2}");
+                            if (result.TotalDividendIncome > 0)
+                                ResultRow("Dividend Income", $"£{result.TotalDividendIncome:N2}");
                             ResultRow("Gross Taxable Income", $"£{result.GrossIncome:N2}", bold: true);
                             ResultRow("Personal Allowance Used", $"£{result.PersonalAllowanceUsed:N2}");
                         });
@@ -463,6 +522,18 @@ namespace PAYETAXCalc.Services
                 }
             }
 
+            // Dividends
+            if (data.DividendIncomes.Count > 0)
+            {
+                body.Append(CreateParagraph(""));
+                body.Append(CreateParagraph("Dividend Income", bold: true, fontSize: 24));
+                foreach (var div in data.DividendIncomes)
+                {
+                    string taxInfo = div.TaxPaid > 0 ? $"  |  Tax Paid: £{div.TaxPaid:N2}" : "";
+                    body.Append(CreateParagraph($"{div.CompanyName}: £{div.GrossDividend:N2}{taxInfo}"));
+                }
+            }
+
             // Other details
             body.Append(CreateParagraph(""));
             body.Append(CreateParagraph("Other Details", bold: true, fontSize: 24));
@@ -490,6 +561,8 @@ namespace PAYETAXCalc.Services
             body.Append(CreateParagraph($"Taxable Savings Interest: £{result.TotalSavingsInterest:N2}"));
             if (result.TotalTaxFreeSavings > 0)
                 body.Append(CreateParagraph($"Tax-Free Savings (ISA): £{result.TotalTaxFreeSavings:N2}"));
+            if (result.TotalDividendIncome > 0)
+                body.Append(CreateParagraph($"Dividend Income: £{result.TotalDividendIncome:N2}"));
             body.Append(CreateParagraph($"Gross Taxable Income: £{result.GrossIncome:N2}", bold: true));
             body.Append(CreateParagraph($"Personal Allowance Used: £{result.PersonalAllowanceUsed:N2}"));
             if (result.GiftAidExtension > 0)

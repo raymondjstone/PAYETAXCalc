@@ -201,4 +201,49 @@ public class ModelTests
         var band = new TaxBand();
         Assert.True(band.ExtendsWithGiftAid);
     }
+
+    // ═══════════ DividendIncome ═══════════
+
+    [Fact]
+    public void DividendIncome_Defaults()
+    {
+        var div = new DividendIncome();
+
+        Assert.Equal("", div.CompanyName);
+        Assert.Equal(0, div.GrossDividend);
+        Assert.Equal(0, div.TaxPaid);
+    }
+
+    [Fact]
+    public void DividendIncome_Raises_PropertyChanged()
+    {
+        var div = new DividendIncome();
+        string? changedProp = null;
+        div.PropertyChanged += (s, e) => changedProp = e.PropertyName;
+
+        div.CompanyName = "TestCo";
+
+        Assert.Equal(nameof(DividendIncome.CompanyName), changedProp);
+    }
+
+    [Fact]
+    public void DividendIncome_NaN_GrossDividend_Becomes_Zero()
+    {
+        var div = new DividendIncome { GrossDividend = double.NaN };
+        Assert.Equal(0, div.GrossDividend);
+    }
+
+    [Fact]
+    public void DividendIncome_NaN_TaxPaid_Becomes_Zero()
+    {
+        var div = new DividendIncome { TaxPaid = double.NaN };
+        Assert.Equal(0, div.TaxPaid);
+    }
+
+    [Fact]
+    public void TaxYearData_DividendIncomes_Empty_By_Default()
+    {
+        var data = new TaxYearData();
+        Assert.Empty(data.DividendIncomes);
+    }
 }

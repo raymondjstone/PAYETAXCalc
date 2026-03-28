@@ -35,6 +35,9 @@ namespace PAYETAXCalc.Models
         private string _pensionTaxCreditInfo = "";
         private bool _canClaimPensionTaxCredit;
         private decimal _reliefAtSourceContributions;
+        private decimal _totalDividendIncome;
+        private decimal _dividendTaxDue;
+        private decimal _totalDividendTaxPaid;
 
         public decimal TotalEmploymentIncome { get => _totalEmploymentIncome; set => SetProperty(ref _totalEmploymentIncome, value); }
         public decimal TotalBenefitsInKind { get => _totalBenefitsInKind; set => SetProperty(ref _totalBenefitsInKind, value); }
@@ -67,5 +70,8 @@ namespace PAYETAXCalc.Models
         public string PensionTaxCreditInfo { get => _pensionTaxCreditInfo; set => SetProperty(ref _pensionTaxCreditInfo, value); }
         public bool CanClaimPensionTaxCredit { get => _canClaimPensionTaxCredit; set => SetProperty(ref _canClaimPensionTaxCredit, value); }
         public decimal ReliefAtSourceContributions { get => _reliefAtSourceContributions; set => SetProperty(ref _reliefAtSourceContributions, value); }
+        public decimal TotalDividendIncome { get => _totalDividendIncome; set => SetProperty(ref _totalDividendIncome, value); }
+        public decimal DividendTaxDue { get => _dividendTaxDue; set => SetProperty(ref _dividendTaxDue, value); }
+        public decimal TotalDividendTaxPaid { get => _totalDividendTaxPaid; set => SetProperty(ref _totalDividendTaxPaid, value); }
     }
 }

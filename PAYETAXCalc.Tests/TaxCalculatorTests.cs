@@ -952,4 +952,185 @@ public class TaxCalculatorTests
         Assert.True(result.CanClaimPensionTaxCredit);
         Assert.True(result.PensionTaxCreditClaimable > 0);
     }
+
+    // ═══════════ Dividend Tax ═══════════
+
+    [Fact]
+    public void No_Dividends_No_Dividend_Tax()
+    {
+        var data = MakeData(50000);
+        var result = TaxCalculator.Calculate(data, Rules202425);
+
+        Assert.Equal(0m, result.TotalDividendIncome);
+        Assert.Equal(0m, result.DividendTaxDue);
+    }
+
+    [Fact]
+    public void Dividends_Within_Allowance_No_Tax()
+    {
+        // 2024/25 dividend allowance = £500
+        var data = MakeData(30000);
+        data.DividendIncomes.Add(new DividendIncome { GrossDividend = 400 });
+        var result = TaxCalculator.Calculate(data, Rules202425);
+
+        Assert.Equal(400m, result.TotalDividendIncome);
+        Assert.Equal(0m, result.DividendTaxDue);
+    }
+
+    [Fact]
+    public void Dividends_At_Allowance_No_Tax()
+    {
+        var data = MakeData(30000);
+        data.DividendIncomes.Add(new DividendIncome { GrossDividend = 500 });
+        var result = TaxCalculator.Calculate(data, Rules202425);
+
+        Assert.Equal(0m, result.DividendTaxDue);
+    }
+
+    [Fact]
+    public void Dividends_Above_Allowance_Basic_Rate()
+    {
+        // Basic rate taxpayer (£30k salary), £1000 dividends
+        // £500 allowance at 0%, remaining £500 at 8.75%
+        var data = MakeData(30000);
+        data.DividendIncomes.Add(new DividendIncome { GrossDividend = 1000 });
+        var result = TaxCalculator.Calculate(data, Rules202425);
+
+        decimal expected = 500m * 0.0875m;
+        Assert.Equal(expected, result.DividendTaxDue);
+    }
+
+    [Fact]
+    public void Dividends_Higher_Rate()
+    {
+        // Higher rate taxpayer (£70k salary), dividends push into higher band
+        // rUK basic band width = 37700, so basic rate up to £50,270 gross
+        // At £70k, taxable non-savings = 70000 - 12570 = 57430
+        // This is above the basic band (37700), so dividends are in higher rate
+        var data = MakeData(70000);
+        data.DividendIncomes.Add(new DividendIncome { GrossDividend = 1000 });
+        var result = TaxCalculator.Calculate(data, Rules202425);
+
+        // All £500 above allowance taxed at higher rate 33.75%
+        decimal expected = 500m * 0.3375m;
+        Assert.Equal(expected, result.DividendTaxDue);
+    }
+
+    [Fact]
+    public void Dividends_Additional_Rate()
+    {
+        // Additional rate taxpayer (£160k salary)
+        var data = MakeData(160000);
+        data.DividendIncomes.Add(new DividendIncome { GrossDividend = 1000 });
+        var result = TaxCalculator.Calculate(data, Rules202425);
+
+        decimal expected = 500m * 0.3935m;
+        Assert.Equal(expected, result.DividendTaxDue);
+    }
+
+    [Fact]
+    public void Dividends_Included_In_Gross_Income()
+    {
+        var data = MakeData(30000);
+        data.DividendIncomes.Add(new DividendIncome { GrossDividend = 5000 });
+        var result = TaxCalculator.Calculate(data, Rules202425);
+
+        Assert.Equal(35000m, result.GrossIncome);
+    }
+
+    [Fact]
+    public void Dividends_Included_In_Total_Tax_Due()
+    {
+        var data = MakeData(30000);
+        var resultNoDivs = TaxCalculator.Calculate(data, Rules202425);
+
+        var data2 = MakeData(30000);
+        data2.DividendIncomes.Add(new DividendIncome { GrossDividend = 2000 });
+        var resultWithDivs = TaxCalculator.Calculate(data2, Rules202425);
+
+        Assert.True(resultWithDivs.TotalIncomeTaxDue > resultNoDivs.TotalIncomeTaxDue);
+    }
+
+    [Fact]
+    public void Dividend_Tax_Paid_Included_In_Total_Tax_Paid()
+    {
+        var data = MakeData(30000, taxPaid: 3000);
+        data.DividendIncomes.Add(new DividendIncome { GrossDividend = 5000, TaxPaid = 200 });
+        var result = TaxCalculator.Calculate(data, Rules202425);
+
+        Assert.Equal(3200m, result.TotalTaxPaidViaPAYE);
+    }
+
+    [Fact]
+    public void Dividend_Tax_Appears_In_Breakdown()
+    {
+        var data = MakeData(30000);
+        data.DividendIncomes.Add(new DividendIncome { GrossDividend = 2000 });
+        var result = TaxCalculator.Calculate(data, Rules202425);
+
+        Assert.Contains(result.TaxBreakdown, b => b.Label.Contains("Dividend"));
+    }
+
+    [Fact]
+    public void Multiple_Dividend_Sources_Summed()
+    {
+        var data = MakeData(30000);
+        data.DividendIncomes.Add(new DividendIncome { CompanyName = "Company A", GrossDividend = 1000 });
+        data.DividendIncomes.Add(new DividendIncome { CompanyName = "Fund B", GrossDividend = 2000 });
+        var result = TaxCalculator.Calculate(data, Rules202425);
+
+        Assert.Equal(3000m, result.TotalDividendIncome);
+    }
+
+    [Fact]
+    public void Dividend_Allowance_Higher_In_202324()
+    {
+        // 2023/24 allowance = £1,000 vs 2024/25 = £500
+        var data = MakeData(30000, taxYear: "2023/24");
+        data.DividendIncomes.Add(new DividendIncome { GrossDividend = 800 });
+        var result = TaxCalculator.Calculate(data, Rules202324);
+
+        // £800 is within £1,000 allowance
+        Assert.Equal(0m, result.DividendTaxDue);
+    }
+
+    [Fact]
+    public void Dividends_PA_Covers_Dividends_When_Low_Income()
+    {
+        // If total non-savings + savings < PA, remaining PA covers dividends
+        var data = MakeData(5000);
+        data.DividendIncomes.Add(new DividendIncome { GrossDividend = 5000 });
+        var result = TaxCalculator.Calculate(data, Rules202425);
+
+        // PA = 12570, non-savings = 5000, remaining PA = 7570
+        // Taxable dividends = max(0, 5000 - 7570) = 0
+        Assert.Equal(0m, result.DividendTaxDue);
+    }
+
+    [Fact]
+    public void Dividends_Partially_Covered_By_PA()
+    {
+        // PA partly absorbs dividends
+        var data = MakeData(10000);
+        data.DividendIncomes.Add(new DividendIncome { GrossDividend = 5000 });
+        var result = TaxCalculator.Calculate(data, Rules202425);
+
+        // PA = 12570, non-savings = 10000, remaining PA = 2570
+        // Taxable dividends = 5000 - 2570 = 2430
+        // First £500 at 0% (allowance), then £1930 at 8.75%
+        decimal expected = 1930m * 0.0875m;
+        Assert.Equal(expected, result.DividendTaxDue);
+    }
+
+    [Fact]
+    public void Dividends_Affect_PA_Taper()
+    {
+        // Dividends count toward adjusted net income for PA taper
+        var data = MakeData(95000);
+        data.DividendIncomes.Add(new DividendIncome { GrossDividend = 20000 });
+        var result = TaxCalculator.Calculate(data, Rules202425);
+
+        // Gross income = 95000 + 20000 = 115000, above £100k taper threshold
+        Assert.True(result.PersonalAllowanceUsed < 12570m);
+    }
 }

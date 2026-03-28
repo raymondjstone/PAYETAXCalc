@@ -28,7 +28,6 @@ namespace PAYETAXCalc.Services
             result.TotalEmploymentIncome = totalSalary;
             result.TotalBenefitsInKind = totalBIK;
             result.TotalPensionContributions = totalPension;
-            result.TotalTaxPaidViaPAYE = totalTaxPaid;
             result.TotalNIPaid = totalNIPaid;
 
             // 2. Calculate allowable employment expenses
@@ -49,12 +48,23 @@ namespace PAYETAXCalc.Services
             result.TotalSavingsInterest = taxableSavingsInterest;
             result.TotalTaxFreeSavings = taxFreeSavings;
 
+            // 4a. Dividend income
+            decimal totalDividends = 0, totalDividendTaxPaid = 0;
+            foreach (var div in data.DividendIncomes)
+            {
+                totalDividends += (decimal)div.GrossDividend;
+                totalDividendTaxPaid += (decimal)div.TaxPaid;
+            }
+            result.TotalDividendIncome = totalDividends;
+            result.TotalDividendTaxPaid = totalDividendTaxPaid;
+            result.TotalTaxPaidViaPAYE = totalTaxPaid + totalDividendTaxPaid;
+
             // 5. Gift Aid
             decimal giftAidGross = (decimal)data.GiftAidDonations * 1.25m;
             result.GiftAidExtension = giftAidGross;
 
             // 6. Gross income and adjusted net income (for PA taper)
-            decimal grossIncome = nonSavingsIncome + taxableSavingsInterest;
+            decimal grossIncome = nonSavingsIncome + taxableSavingsInterest + totalDividends;
             result.GrossIncome = grossIncome;
             decimal adjustedNetIncome = grossIncome - giftAidGross;
 
@@ -81,10 +91,12 @@ namespace PAYETAXCalc.Services
             result.PersonalAllowanceUsed = personalAllowance;
             result.MarriageAllowanceCredit = marriageCredit;
 
-            // 9. Taxable income split
+            // 9. Taxable income split (PA covers non-savings first, then savings, then dividends)
             decimal taxableNonSavings = Math.Max(0, nonSavingsIncome - personalAllowance);
             decimal remainingPA = Math.Max(0, personalAllowance - nonSavingsIncome);
             decimal taxableSavings = Math.Max(0, taxableSavingsInterest - remainingPA);
+            decimal remainingPA2 = Math.Max(0, remainingPA - taxableSavingsInterest);
+            decimal taxableDividends = Math.Max(0, totalDividends - remainingPA2);
             result.TaxableNonSavingsIncome = taxableNonSavings;
             result.TaxableSavingsIncome = taxableSavings;
 
@@ -109,8 +121,14 @@ namespace PAYETAXCalc.Services
                 });
             }
 
+            // 11a. Tax on dividends (own rates, positioned after non-savings + savings)
+            decimal dividendTax = CalculateDividendTax(
+                taxableDividends, taxableNonSavings, taxableSavings,
+                nonSavingsIncome, personalAllowance, giftAidGross, rules, result);
+            result.DividendTaxDue = dividendTax;
+
             // 12. Total tax
-            decimal totalTaxDue = nonSavingsTax + savingsTax - marriageCredit;
+            decimal totalTaxDue = nonSavingsTax + savingsTax + dividendTax - marriageCredit;
             totalTaxDue = Math.Max(0, totalTaxDue);
             result.TotalIncomeTaxDue = totalTaxDue;
 
@@ -361,6 +379,66 @@ namespace PAYETAXCalc.Services
             result.TotalEmploymentExpenses = totalExpenses;
             result.ExpensesBreakdown = expenseLines.Count > 0 ? string.Join("\n", expenseLines) : "";
             return totalExpenses;
+        }
+
+        private static decimal CalculateDividendTax(
+            decimal taxableDividends,
+            decimal taxableNonSavings,
+            decimal taxableSavings,
+            decimal nonSavingsIncome,
+            decimal personalAllowance,
+            decimal giftAidGross,
+            TaxYearRules rules,
+            TaxCalculationResult result)
+        {
+            if (taxableDividends <= 0) return 0;
+
+            // Dividends use rUK band thresholds to determine which dividend rate applies
+            decimal rUKBasicBandWidth = rules.BasicRateBandWidth + giftAidGross;
+            decimal rUKAdditionalThresholdTaxable = rules.AdditionalRateThresholdGross + giftAidGross - personalAllowance;
+            if (rUKAdditionalThresholdTaxable < rUKBasicBandWidth)
+                rUKAdditionalThresholdTaxable = rUKBasicBandWidth;
+
+            // Income already occupying bands before dividends
+            decimal priorTaxableIncome = taxableNonSavings + taxableSavings;
+
+            // Dividend allowance (0% rate)
+            decimal dividendAllowanceUsed = Math.Min(taxableDividends, rules.DividendAllowance);
+            decimal dividendsRemaining = taxableDividends - dividendAllowanceUsed;
+
+            decimal dividendTax = 0;
+
+            if (dividendsRemaining > 0)
+            {
+                // Position dividends in rUK bands after non-savings + savings
+                decimal priorPlusDivAllowance = priorTaxableIncome + dividendAllowanceUsed;
+
+                decimal basicBandRemaining = Math.Max(0, rUKBasicBandWidth - priorPlusDivAllowance);
+                decimal higherBandRemaining = Math.Max(0, rUKAdditionalThresholdTaxable - Math.Max(priorPlusDivAllowance, rUKBasicBandWidth));
+
+                decimal divAtBasic = Math.Min(dividendsRemaining, basicBandRemaining);
+                dividendTax += divAtBasic * rules.DividendBasicRate;
+                dividendsRemaining -= divAtBasic;
+
+                decimal divAtHigher = Math.Min(dividendsRemaining, higherBandRemaining);
+                dividendTax += divAtHigher * rules.DividendHigherRate;
+                dividendsRemaining -= divAtHigher;
+
+                if (dividendsRemaining > 0)
+                    dividendTax += dividendsRemaining * rules.DividendAdditionalRate;
+            }
+
+            if (taxableDividends > 0)
+            {
+                result.TaxBreakdown.Add(new TaxBreakdownLine
+                {
+                    Label = "Tax on Dividends:",
+                    IncomeText = $"on £{taxableDividends:N2}",
+                    TaxText = $"£{dividendTax:N2}",
+                });
+            }
+
+            return dividendTax;
         }
 
         /// <summary>

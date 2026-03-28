@@ -272,6 +272,59 @@ public class ExportServiceTests : IDisposable
         Assert.Contains("DISCLAIMER", allText);
     }
 
+    // ═══════════ Dividends in exports ═══════════
+
+    [Fact]
+    public void ExportToExcel_Contains_Dividends_Sheet()
+    {
+        var (data, rules, result) = CreateTestDataWithDividends();
+        string path = Path.Combine(_tempDir, "div.xlsx");
+
+        ExportService.ExportToExcel(path, data, rules, result);
+
+        using var wb = new ClosedXML.Excel.XLWorkbook(path);
+        Assert.True(wb.TryGetWorksheet("Dividends", out _));
+    }
+
+    [Fact]
+    public void ExportToPdf_With_Dividends_Creates_File()
+    {
+        var (data, rules, result) = CreateTestDataWithDividends();
+        string path = Path.Combine(_tempDir, "div.pdf");
+
+        ExportService.ExportToPdf(path, data, rules, result);
+
+        Assert.True(File.Exists(path));
+        Assert.True(new FileInfo(path).Length > 0);
+    }
+
+    [Fact]
+    public void ExportToWord_Contains_Dividend_Company()
+    {
+        var (data, rules, result) = CreateTestDataWithDividends();
+        string path = Path.Combine(_tempDir, "div.docx");
+
+        ExportService.ExportToWord(path, data, rules, result);
+
+        using var doc = DocumentFormat.OpenXml.Packaging.WordprocessingDocument.Open(path, false);
+        string allText = doc.MainDocumentPart!.Document.Body!.InnerText;
+        Assert.Contains("Dividend Corp", allText);
+    }
+
+    private static (TaxYearData data, TaxYearRules rules, TaxCalculationResult result) CreateTestDataWithDividends()
+    {
+        var (data, rules, result) = CreateTestData();
+        data.DividendIncomes.Add(new DividendIncome
+        {
+            CompanyName = "Dividend Corp",
+            GrossDividend = 3000,
+            TaxPaid = 100,
+        });
+        // Recalculate with dividends
+        result = TaxCalculator.Calculate(data, rules);
+        return (data, rules, result);
+    }
+
     // ═══════════ Edge cases ═══════════
 
     [Fact]

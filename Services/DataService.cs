@@ -43,6 +43,7 @@ namespace PAYETAXCalc.Services
                         {
                             ty.Employments ??= new ObservableCollection<Employment>();
                             ty.SavingsIncomes ??= new ObservableCollection<SavingsIncome>();
+                            ty.DividendIncomes ??= new ObservableCollection<DividendIncome>();
                         }
                         return data;
                     }
@@ -108,6 +109,17 @@ namespace PAYETAXCalc.Services
                         ProviderName = sav.ProviderName,
                         IsTaxFree = sav.IsTaxFree,
                         InterestAmount = 0,
+                    });
+                }
+
+                // Carry forward dividend sources
+                foreach (var div in previousYear.DividendIncomes)
+                {
+                    newYear.DividendIncomes.Add(new DividendIncome
+                    {
+                        CompanyName = div.CompanyName,
+                        GrossDividend = 0,
+                        TaxPaid = 0,
                     });
                 }
 
