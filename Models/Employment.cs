@@ -20,6 +20,13 @@ namespace PAYETAXCalc.Models
         private string _otherExpensesDescription = "";
         private bool _employmentEnded;
 
+        // Company Car
+        private bool _hasCompanyCar;
+        private double _carListPrice;
+        private int _carCO2Emissions;
+        private bool _carIsElectric;
+        private double _carFuelBenefit; // If employer provides fuel
+
         public string EmployerName
         {
             get => _employerName;
@@ -108,6 +115,37 @@ namespace PAYETAXCalc.Models
         {
             get => _employmentEnded;
             set => SetProperty(ref _employmentEnded, value);
+        }
+
+        // Company Car
+        public bool HasCompanyCar
+        {
+            get => _hasCompanyCar;
+            set => SetProperty(ref _hasCompanyCar, value);
+        }
+
+        public double CarListPrice
+        {
+            get => _carListPrice;
+            set => SetProperty(ref _carListPrice, double.IsNaN(value) ? 0 : value);
+        }
+
+        public int CarCO2Emissions
+        {
+            get => _carCO2Emissions;
+            set => SetProperty(ref _carCO2Emissions, value);
+        }
+
+        public bool CarIsElectric
+        {
+            get => _carIsElectric;
+            set => SetProperty(ref _carIsElectric, value);
+        }
+
+        public double CarFuelBenefit
+        {
+            get => _carFuelBenefit;
+            set => SetProperty(ref _carFuelBenefit, double.IsNaN(value) ? 0 : value);
         }
     }
 }

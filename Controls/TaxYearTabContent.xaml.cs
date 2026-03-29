@@ -28,6 +28,7 @@ namespace PAYETAXCalc.Controls
             EmploymentsPanel.ItemsSource = data.Employments;
             SavingsPanel.ItemsSource = data.SavingsIncomes;
             DividendsPanel.ItemsSource = data.DividendIncomes;
+            CapitalGainsPanel.ItemsSource = data.CapitalGains;
 
             MarriageAllowanceCheck.IsChecked = data.ClaimMarriageAllowance;
             BlindPersonCheck.IsChecked = data.ClaimBlindPersonsAllowance;
@@ -39,6 +40,50 @@ namespace PAYETAXCalc.Controls
                 MAReceiver.IsChecked = true;
             else
                 MATransferrer.IsChecked = true;
+
+            // Student Loans
+            HasStudentLoanCheck.IsChecked = data.HasStudentLoan;
+            StudentLoanPlanPanel.Visibility = data.HasStudentLoan ? Visibility.Visible : Visibility.Collapsed;
+            switch (data.StudentLoanPlan)
+            {
+                case 1: SLPlan1.IsChecked = true; break;
+                case 2: SLPlan2.IsChecked = true; break;
+                case 4: SLPlan4.IsChecked = true; break;
+                case 5: SLPlan5.IsChecked = true; break;
+            }
+            HasPostgraduateLoanCheck.IsChecked = data.HasPostgraduateLoan;
+
+            // Child Benefit
+            NumberOfChildrenBox.Value = data.NumberOfChildren;
+            ChildBenefitAmountBox.Value = data.ChildBenefitAmount;
+
+            // Capital Gains
+            CapitalGainsLossesBox.Value = data.CapitalGainsLosses;
+            CapitalGainsLossesPanel.Visibility = data.CapitalGains.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+
+            // Rental
+            RentalIncomeBox.Value = data.RentalIncome;
+            RentalExpensesBox.Value = data.RentalExpenses;
+            MortgageInterestBox.Value = data.MortgageInterest;
+            UsePropertyAllowanceCheck.IsChecked = data.UsePropertyAllowance;
+
+            // Trading
+            TradingIncomeBox.Value = data.TradingIncome;
+            TradingExpensesBox.Value = data.TradingExpenses;
+            UseTradingAllowanceCheck.IsChecked = data.UseTradingAllowance;
+
+            // Investment Reliefs
+            EisBox.Value = data.EisInvestment;
+            SeisBox.Value = data.SeisInvestment;
+            VctBox.Value = data.VctInvestment;
+
+            // Tax Code
+            TaxCodeBox.Text = data.TaxCode;
+            PriorYearTaxBox.Value = data.PriorYearTaxOwed;
+
+            // Wire up student loan checkbox
+            HasStudentLoanCheck.Checked += StudentLoan_Changed;
+            HasStudentLoanCheck.Unchecked += StudentLoan_Changed;
 
             RulesInfoBar.Title = $"Tax Rules for {data.TaxYear}";
             RulesInfoBar.Message = TaxRulesProvider.GetRulesSummary(Rules);
@@ -58,6 +103,41 @@ namespace PAYETAXCalc.Controls
             TaxYearData.IsScottishTaxpayer = ScottishTaxpayerCheck.IsChecked == true;
             TaxYearData.GiftAidDonations = double.IsNaN(GiftAidBox.Value) ? 0 : GiftAidBox.Value;
             TaxYearData.ReliefAtSourcePensionContributions = double.IsNaN(ReliefAtSourceBox.Value) ? 0 : ReliefAtSourceBox.Value;
+
+            // Student Loans
+            TaxYearData.HasStudentLoan = HasStudentLoanCheck.IsChecked == true;
+            if (SLPlan1.IsChecked == true) TaxYearData.StudentLoanPlan = 1;
+            else if (SLPlan2.IsChecked == true) TaxYearData.StudentLoanPlan = 2;
+            else if (SLPlan4.IsChecked == true) TaxYearData.StudentLoanPlan = 4;
+            else if (SLPlan5.IsChecked == true) TaxYearData.StudentLoanPlan = 5;
+            TaxYearData.HasPostgraduateLoan = HasPostgraduateLoanCheck.IsChecked == true;
+
+            // Child Benefit
+            TaxYearData.NumberOfChildren = double.IsNaN(NumberOfChildrenBox.Value) ? 0 : (int)NumberOfChildrenBox.Value;
+            TaxYearData.ChildBenefitAmount = double.IsNaN(ChildBenefitAmountBox.Value) ? 0 : ChildBenefitAmountBox.Value;
+
+            // Capital Gains
+            TaxYearData.CapitalGainsLosses = double.IsNaN(CapitalGainsLossesBox.Value) ? 0 : CapitalGainsLossesBox.Value;
+
+            // Rental
+            TaxYearData.RentalIncome = double.IsNaN(RentalIncomeBox.Value) ? 0 : RentalIncomeBox.Value;
+            TaxYearData.RentalExpenses = double.IsNaN(RentalExpensesBox.Value) ? 0 : RentalExpensesBox.Value;
+            TaxYearData.MortgageInterest = double.IsNaN(MortgageInterestBox.Value) ? 0 : MortgageInterestBox.Value;
+            TaxYearData.UsePropertyAllowance = UsePropertyAllowanceCheck.IsChecked == true;
+
+            // Trading
+            TaxYearData.TradingIncome = double.IsNaN(TradingIncomeBox.Value) ? 0 : TradingIncomeBox.Value;
+            TaxYearData.TradingExpenses = double.IsNaN(TradingExpensesBox.Value) ? 0 : TradingExpensesBox.Value;
+            TaxYearData.UseTradingAllowance = UseTradingAllowanceCheck.IsChecked == true;
+
+            // Investment Reliefs
+            TaxYearData.EisInvestment = double.IsNaN(EisBox.Value) ? 0 : EisBox.Value;
+            TaxYearData.SeisInvestment = double.IsNaN(SeisBox.Value) ? 0 : SeisBox.Value;
+            TaxYearData.VctInvestment = double.IsNaN(VctBox.Value) ? 0 : VctBox.Value;
+
+            // Tax Code
+            TaxYearData.TaxCode = TaxCodeBox.Text ?? "";
+            TaxYearData.PriorYearTaxOwed = double.IsNaN(PriorYearTaxBox.Value) ? 0 : PriorYearTaxBox.Value;
         }
 
         private void AddEmployment_Click(object sender, RoutedEventArgs e)
@@ -105,6 +185,24 @@ namespace PAYETAXCalc.Controls
             }
         }
 
+        private void AddCapitalGain_Click(object sender, RoutedEventArgs e)
+        {
+            TaxYearData?.CapitalGains.Add(new CapitalGain());
+            CapitalGainsLossesPanel.Visibility = Visibility.Visible;
+            DataChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        private void RemoveCapitalGain_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button btn && btn.DataContext is CapitalGain cg && TaxYearData != null)
+            {
+                TaxYearData.CapitalGains.Remove(cg);
+                if (TaxYearData.CapitalGains.Count == 0)
+                    CapitalGainsLossesPanel.Visibility = Visibility.Collapsed;
+                DataChanged?.Invoke(this, EventArgs.Empty);
+            }
+        }
+
         private void MarriageAllowance_Changed(object sender, RoutedEventArgs e)
         {
             if (MarriageDirectionPanel != null && MarriageAllowanceCheck != null)
@@ -114,11 +212,19 @@ namespace PAYETAXCalc.Controls
             }
         }
 
+        private void StudentLoan_Changed(object sender, RoutedEventArgs e)
+        {
+            if (StudentLoanPlanPanel != null)
+            {
+                StudentLoanPlanPanel.Visibility = HasStudentLoanCheck.IsChecked == true
+                    ? Visibility.Visible : Visibility.Collapsed;
+            }
+        }
+
         private void Calculate_Click(object sender, RoutedEventArgs e)
         {
             if (TaxYearData == null || Rules == null) return;
 
-            // Re-fetch rules in case they've been updated for this year
             Rules = TaxRulesProvider.GetOrEstimateRules(TaxYearData.TaxYear);
 
             SyncDataFromUI();
@@ -156,7 +262,6 @@ namespace PAYETAXCalc.Controls
             picker.SuggestedFileName = $"TaxCalculation_{TaxYearData!.TaxYear.Replace("/", "-")}";
             picker.FileTypeChoices.Add(typeName, extensions);
 
-            // WinUI 3 requires HWND
             var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(
                 ((Microsoft.UI.Xaml.Application.Current as App)!).m_window!);
             WinRT.Interop.InitializeWithWindow.Initialize(picker, hwnd);
@@ -198,6 +303,17 @@ namespace PAYETAXCalc.Controls
             ResEmploymentIncome.Text = $"£{r.TotalEmploymentIncome:N2}";
             ResBIK.Text = $"£{r.TotalBenefitsInKind:N2}";
 
+            // Company Car
+            if (r.TotalCompanyCarBenefit > 0)
+            {
+                ResCompanyCarRow.Visibility = Visibility.Visible;
+                ResCompanyCar.Text = $"£{r.TotalCompanyCarBenefit:N2}";
+            }
+            else
+            {
+                ResCompanyCarRow.Visibility = Visibility.Collapsed;
+            }
+
             if (r.TotalPensionContributions > 0)
             {
                 ResPensionRow.Visibility = Visibility.Visible;
@@ -226,6 +342,28 @@ namespace PAYETAXCalc.Controls
             {
                 ResExpensesRow.Visibility = Visibility.Collapsed;
                 ResExpensesBreakdown.Visibility = Visibility.Collapsed;
+            }
+
+            // Rental
+            if (r.RentalTaxableIncome > 0)
+            {
+                ResRentalRow.Visibility = Visibility.Visible;
+                ResRental.Text = $"£{r.RentalTaxableIncome:N2}";
+            }
+            else
+            {
+                ResRentalRow.Visibility = Visibility.Collapsed;
+            }
+
+            // Trading
+            if (r.TradingTaxableIncome > 0)
+            {
+                ResTradingRow.Visibility = Visibility.Visible;
+                ResTrading.Text = $"£{r.TradingTaxableIncome:N2}";
+            }
+            else
+            {
+                ResTradingRow.Visibility = Visibility.Collapsed;
             }
 
             ResSavings.Text = $"£{r.TotalSavingsInterest:N2}";
@@ -264,13 +402,50 @@ namespace PAYETAXCalc.Controls
                 ResMarriageRow.Visibility = Visibility.Collapsed;
             }
 
-            // Dynamic tax breakdown (supports both Scottish and rUK bands)
+            // Mortgage interest relief
+            if (r.MortgageInterestRelief > 0)
+            {
+                ResMortgageReliefRow.Visibility = Visibility.Visible;
+                ResMortgageRelief.Text = $"-£{r.MortgageInterestRelief:N2}";
+            }
+            else
+            {
+                ResMortgageReliefRow.Visibility = Visibility.Collapsed;
+            }
+
+            // Investment relief
+            if (r.TotalInvestmentRelief > 0)
+            {
+                ResInvestmentReliefRow.Visibility = Visibility.Visible;
+                ResInvestmentRelief.Text = $"-£{r.TotalInvestmentRelief:N2}";
+            }
+            else
+            {
+                ResInvestmentReliefRow.Visibility = Visibility.Collapsed;
+            }
+
+            // Tax Breakdown
             string regime = TaxYearData?.IsScottishTaxpayer == true ? "Scottish" : "rUK";
             ResTaxBreakdownHeader.Text = $"Income Tax Breakdown ({regime} rates)";
             TaxBreakdownItems.ItemsSource = r.TaxBreakdown;
 
             ResTotalTaxDue.Text = $"£{r.TotalIncomeTaxDue:N2}";
             ResTotalTaxPaid.Text = $"£{r.TotalTaxPaidViaPAYE:N2}";
+
+            // Prior year tax collected
+            if (r.PriorYearTaxCollected > 0)
+            {
+                ResPriorYearTaxRow.Visibility = Visibility.Visible;
+                ResEffectiveTaxPaidRow.Visibility = Visibility.Visible;
+                ResPriorYearTax.Text = $"-£{r.PriorYearTaxCollected:N2}";
+                decimal effectivePaid = r.TotalTaxPaidViaPAYE - r.PriorYearTaxCollected;
+                ResEffectiveTaxPaid.Text = $"£{effectivePaid:N2}";
+            }
+            else
+            {
+                ResPriorYearTaxRow.Visibility = Visibility.Collapsed;
+                ResEffectiveTaxPaidRow.Visibility = Visibility.Collapsed;
+            }
 
             if (r.TaxOverUnderPayment > 0)
             {
@@ -297,7 +472,79 @@ namespace PAYETAXCalc.Controls
             ResNIPaid.Text = $"£{r.TotalNIPaid:N2}";
             ResExpectedNI.Text = $"£{r.ExpectedNI:N2}";
 
-            // Pension Tax Credit display
+            // Student Loan
+            if (r.StudentLoanRepayment > 0 || !string.IsNullOrEmpty(r.StudentLoanInfo))
+            {
+                ResStudentLoanSection.Visibility = Visibility.Visible;
+                ResStudentLoanPanel.Visibility = Visibility.Visible;
+                ResStudentLoan.Text = $"£{r.StudentLoanRepayment:N2}";
+                ResStudentLoanInfo.Text = r.StudentLoanInfo;
+            }
+            else
+            {
+                ResStudentLoanSection.Visibility = Visibility.Collapsed;
+                ResStudentLoanPanel.Visibility = Visibility.Collapsed;
+            }
+
+            // Child Benefit Charge
+            if (!string.IsNullOrEmpty(r.ChildBenefitInfo))
+            {
+                ResChildBenefitSection.Visibility = Visibility.Visible;
+                ResChildBenefitPanel.Visibility = Visibility.Visible;
+                ResChildBenefit.Text = r.ChildBenefitCharge > 0 ? $"£{r.ChildBenefitCharge:N2}" : "£0.00 (no charge)";
+                ResChildBenefitInfo.Text = r.ChildBenefitInfo;
+            }
+            else
+            {
+                ResChildBenefitSection.Visibility = Visibility.Collapsed;
+                ResChildBenefitPanel.Visibility = Visibility.Collapsed;
+            }
+
+            // Capital Gains Tax
+            if (r.TotalCapitalGains > 0 || r.CapitalGainsTax > 0 || !string.IsNullOrEmpty(r.CapitalGainsInfo))
+            {
+                ResCGTSection.Visibility = Visibility.Visible;
+                ResCGTPanel.Visibility = Visibility.Visible;
+                ResCGT.Text = $"£{r.CapitalGainsTax:N2}";
+                ResCGTInfo.Text = r.CapitalGainsInfo;
+            }
+            else
+            {
+                ResCGTSection.Visibility = Visibility.Collapsed;
+                ResCGTPanel.Visibility = Visibility.Collapsed;
+            }
+
+            // Pension Annual Allowance Charge
+            if (r.PensionAnnualAllowanceCharge > 0)
+            {
+                ResPensionAACSection.Visibility = Visibility.Visible;
+                ResPensionAACPanel.Visibility = Visibility.Visible;
+                ResPensionAAC.Text = $"£{r.PensionAnnualAllowanceCharge:N2}";
+                ResPensionAACInfo.Text = r.PensionAACInfo;
+            }
+            else
+            {
+                ResPensionAACSection.Visibility = Visibility.Collapsed;
+                ResPensionAACPanel.Visibility = Visibility.Collapsed;
+            }
+
+            // Tax Code Validation
+            if (!string.IsNullOrEmpty(r.TaxCodeValidation))
+            {
+                ResTaxCodeSection.Visibility = Visibility.Visible;
+                ResTaxCodePanel.Visibility = Visibility.Visible;
+                ResTaxCodeInfo.Text = r.TaxCodeValidation;
+                ResTaxCodeInfo.Foreground = r.TaxCodeHasWarning
+                    ? new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.OrangeRed)
+                    : new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.ForestGreen);
+            }
+            else
+            {
+                ResTaxCodeSection.Visibility = Visibility.Collapsed;
+                ResTaxCodePanel.Visibility = Visibility.Collapsed;
+            }
+
+            // Pension Tax Credit
             if (r.ReliefAtSourceContributions > 0)
             {
                 ResPensionTaxCreditSection.Visibility = Visibility.Visible;
@@ -319,6 +566,45 @@ namespace PAYETAXCalc.Controls
             {
                 ResPensionTaxCreditSection.Visibility = Visibility.Collapsed;
                 ResPensionTaxCreditPanel.Visibility = Visibility.Collapsed;
+            }
+
+            // Company Car details
+            if (!string.IsNullOrEmpty(r.CompanyCarInfo))
+            {
+                ResCompanyCarSection.Visibility = Visibility.Visible;
+                ResCompanyCarPanel.Visibility = Visibility.Visible;
+                ResCompanyCarInfo.Text = r.CompanyCarInfo;
+            }
+            else
+            {
+                ResCompanyCarSection.Visibility = Visibility.Collapsed;
+                ResCompanyCarPanel.Visibility = Visibility.Collapsed;
+            }
+
+            // Investment Relief details
+            if (!string.IsNullOrEmpty(r.InvestmentReliefInfo))
+            {
+                ResInvestmentSection.Visibility = Visibility.Visible;
+                ResInvestmentPanel.Visibility = Visibility.Visible;
+                ResInvestmentInfo.Text = r.InvestmentReliefInfo;
+            }
+            else
+            {
+                ResInvestmentSection.Visibility = Visibility.Collapsed;
+                ResInvestmentPanel.Visibility = Visibility.Collapsed;
+            }
+
+            // Rental details
+            if (!string.IsNullOrEmpty(r.RentalInfo))
+            {
+                ResRentalSection.Visibility = Visibility.Visible;
+                ResRentalPanel.Visibility = Visibility.Visible;
+                ResRentalInfo.Text = r.RentalInfo;
+            }
+            else
+            {
+                ResRentalSection.Visibility = Visibility.Collapsed;
+                ResRentalPanel.Visibility = Visibility.Collapsed;
             }
 
             ResultInfoBar.Message = r.Summary;

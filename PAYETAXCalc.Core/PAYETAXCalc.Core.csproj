@@ -19,6 +19,7 @@
     <Compile Include="..\Models\Employment.cs" Link="Models\Employment.cs" />
     <Compile Include="..\Models\SavingsIncome.cs" Link="Models\SavingsIncome.cs" />
     <Compile Include="..\Models\DividendIncome.cs" Link="Models\DividendIncome.cs" />
+    <Compile Include="..\Models\CapitalGain.cs" Link="Models\CapitalGain.cs" />
     <Compile Include="..\Models\TaxYearData.cs" Link="Models\TaxYearData.cs" />
     <Compile Include="..\Models\TaxYearRules.cs" Link="Models\TaxYearRules.cs" />
     <Compile Include="..\Models\TaxCalculationResult.cs" Link="Models\TaxCalculationResult.cs" />

@@ -66,5 +66,45 @@ namespace PAYETAXCalc.Models
         public decimal MileageRateFirst10000 { get; set; }
         public decimal MileageRateOver10000 { get; set; }
         public decimal FlatRateUniformAllowance { get; set; }
+
+        // Student Loan Thresholds (annual)
+        public decimal StudentLoanPlan1Threshold { get; set; }
+        public decimal StudentLoanPlan2Threshold { get; set; }
+        public decimal StudentLoanPlan4Threshold { get; set; }
+        public decimal StudentLoanPlan5Threshold { get; set; }
+        public decimal StudentLoanRate { get; set; } // 9% for plans 1-5
+        public decimal PostgraduateLoanThreshold { get; set; }
+        public decimal PostgraduateLoanRate { get; set; } // 6%
+
+        // High Income Child Benefit Charge
+        public decimal HICBCThreshold { get; set; }
+        public decimal HICBCFullChargeThreshold { get; set; }
+        public decimal ChildBenefitFirstChildWeekly { get; set; }
+        public decimal ChildBenefitAdditionalChildWeekly { get; set; }
+
+        // Capital Gains Tax
+        public decimal CGTAnnualExemptAmount { get; set; }
+        public decimal CGTBasicRateAssets { get; set; }
+        public decimal CGTHigherRateAssets { get; set; }
+        public decimal CGTBasicRateProperty { get; set; }
+        public decimal CGTHigherRateProperty { get; set; }
+
+        // Property/Rental
+        public decimal PropertyAllowance { get; set; }
+        public decimal MortgageInterestReliefRate { get; set; } // 20% basic rate credit
+
+        // Trading Allowance
+        public decimal TradingAllowance { get; set; }
+
+        // Pension Annual Allowance
+        public decimal PensionAnnualAllowance { get; set; }
+
+        // Investment Relief Rates
+        public decimal EISReliefRate { get; set; }
+        public decimal SEISReliefRate { get; set; }
+        public decimal VCTReliefRate { get; set; }
+
+        // Company Car - Fuel benefit charge multiplier
+        public decimal CarFuelBenefitMultiplier { get; set; }
     }
 }

@@ -39,6 +39,48 @@ namespace PAYETAXCalc.Models
         private decimal _dividendTaxDue;
         private decimal _totalDividendTaxPaid;
 
+        // Student Loan
+        private decimal _studentLoanRepayment;
+        private string _studentLoanInfo = "";
+
+        // High Income Child Benefit Charge
+        private decimal _childBenefitCharge;
+        private string _childBenefitInfo = "";
+
+        // Capital Gains Tax
+        private decimal _capitalGainsTax;
+        private string _capitalGainsInfo = "";
+        private decimal _totalCapitalGains;
+
+        // Rental/Property Income
+        private decimal _rentalProfit;
+        private decimal _rentalTaxableIncome;
+        private decimal _mortgageInterestRelief;
+        private string _rentalInfo = "";
+
+        // Trading Income
+        private decimal _tradingTaxableIncome;
+        private string _tradingInfo = "";
+
+        // Pension Annual Allowance
+        private decimal _pensionAnnualAllowanceCharge;
+        private string _pensionAACInfo = "";
+
+        // Investment Reliefs
+        private decimal _totalInvestmentRelief;
+        private string _investmentReliefInfo = "";
+
+        // Company Car
+        private decimal _totalCompanyCarBenefit;
+        private string _companyCarInfo = "";
+
+        // Prior Year Tax
+        private decimal _priorYearTaxCollected;
+
+        // Tax Code Validation
+        private string _taxCodeValidation = "";
+        private bool _taxCodeHasWarning;
+
         public decimal TotalEmploymentIncome { get => _totalEmploymentIncome; set => SetProperty(ref _totalEmploymentIncome, value); }
         public decimal TotalBenefitsInKind { get => _totalBenefitsInKind; set => SetProperty(ref _totalBenefitsInKind, value); }
         public decimal TotalPensionContributions { get => _totalPensionContributions; set => SetProperty(ref _totalPensionContributions, value); }
@@ -73,5 +115,47 @@ namespace PAYETAXCalc.Models
         public decimal TotalDividendIncome { get => _totalDividendIncome; set => SetProperty(ref _totalDividendIncome, value); }
         public decimal DividendTaxDue { get => _dividendTaxDue; set => SetProperty(ref _dividendTaxDue, value); }
         public decimal TotalDividendTaxPaid { get => _totalDividendTaxPaid; set => SetProperty(ref _totalDividendTaxPaid, value); }
+
+        // Student Loan
+        public decimal StudentLoanRepayment { get => _studentLoanRepayment; set => SetProperty(ref _studentLoanRepayment, value); }
+        public string StudentLoanInfo { get => _studentLoanInfo; set => SetProperty(ref _studentLoanInfo, value); }
+
+        // High Income Child Benefit Charge
+        public decimal ChildBenefitCharge { get => _childBenefitCharge; set => SetProperty(ref _childBenefitCharge, value); }
+        public string ChildBenefitInfo { get => _childBenefitInfo; set => SetProperty(ref _childBenefitInfo, value); }
+
+        // Capital Gains Tax
+        public decimal CapitalGainsTax { get => _capitalGainsTax; set => SetProperty(ref _capitalGainsTax, value); }
+        public string CapitalGainsInfo { get => _capitalGainsInfo; set => SetProperty(ref _capitalGainsInfo, value); }
+        public decimal TotalCapitalGains { get => _totalCapitalGains; set => SetProperty(ref _totalCapitalGains, value); }
+
+        // Rental/Property Income
+        public decimal RentalProfit { get => _rentalProfit; set => SetProperty(ref _rentalProfit, value); }
+        public decimal RentalTaxableIncome { get => _rentalTaxableIncome; set => SetProperty(ref _rentalTaxableIncome, value); }
+        public decimal MortgageInterestRelief { get => _mortgageInterestRelief; set => SetProperty(ref _mortgageInterestRelief, value); }
+        public string RentalInfo { get => _rentalInfo; set => SetProperty(ref _rentalInfo, value); }
+
+        // Trading Income
+        public decimal TradingTaxableIncome { get => _tradingTaxableIncome; set => SetProperty(ref _tradingTaxableIncome, value); }
+        public string TradingInfo { get => _tradingInfo; set => SetProperty(ref _tradingInfo, value); }
+
+        // Pension Annual Allowance Charge
+        public decimal PensionAnnualAllowanceCharge { get => _pensionAnnualAllowanceCharge; set => SetProperty(ref _pensionAnnualAllowanceCharge, value); }
+        public string PensionAACInfo { get => _pensionAACInfo; set => SetProperty(ref _pensionAACInfo, value); }
+
+        // Investment Reliefs
+        public decimal TotalInvestmentRelief { get => _totalInvestmentRelief; set => SetProperty(ref _totalInvestmentRelief, value); }
+        public string InvestmentReliefInfo { get => _investmentReliefInfo; set => SetProperty(ref _investmentReliefInfo, value); }
+
+        // Company Car
+        public decimal TotalCompanyCarBenefit { get => _totalCompanyCarBenefit; set => SetProperty(ref _totalCompanyCarBenefit, value); }
+        public string CompanyCarInfo { get => _companyCarInfo; set => SetProperty(ref _companyCarInfo, value); }
+
+        // Prior Year Tax
+        public decimal PriorYearTaxCollected { get => _priorYearTaxCollected; set => SetProperty(ref _priorYearTaxCollected, value); }
+
+        // Tax Code Validation
+        public string TaxCodeValidation { get => _taxCodeValidation; set => SetProperty(ref _taxCodeValidation, value); }
+        public bool TaxCodeHasWarning { get => _taxCodeHasWarning; set => SetProperty(ref _taxCodeHasWarning, value); }
     }
 }

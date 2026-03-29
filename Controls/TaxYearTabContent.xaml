@@ -15,15 +15,13 @@
         <converters:CurrencyConverter x:Key="CurrencyFmt"/>
         <converters:OverUnderPaymentConverter x:Key="OverUnderFmt"/>
 
-        <!-- Currency formatter with thousand separators and 2 decimal places -->
-        <nf:DecimalFormatter x:Key="CurrencyFormatter" 
-                             FractionDigits="2" 
+        <nf:DecimalFormatter x:Key="CurrencyFormatter"
+                             FractionDigits="2"
                              IntegerDigits="1"
                              IsGrouped="True"/>
 
-        <!-- Whole number formatter with thousand separators -->
-        <nf:DecimalFormatter x:Key="WholeNumberFormatter" 
-                             FractionDigits="0" 
+        <nf:DecimalFormatter x:Key="WholeNumberFormatter"
+                             FractionDigits="0"
                              IntegerDigits="1"
                              IsGrouped="True"/>
     </UserControl.Resources>
@@ -77,7 +75,7 @@
                                           IsChecked="{Binding IsPensionOrAnnuity, Mode=TwoWay}"
                                           Margin="0,0,0,4"/>
 
-                                <!-- Income: Salary/Pension, Tax Paid (always visible) -->
+                                <!-- Income: Salary/Pension, Tax Paid -->
                                 <Grid ColumnDefinitions="*,*,Auto">
                                     <NumberBox Header="Gross Income (£)"
                                                Value="{Binding GrossSalary, Mode=TwoWay}"
@@ -122,6 +120,46 @@
                                                    Style="{ThemeResource CaptionTextBlockStyle}"/>
                                     </Grid>
 
+                                    <!-- Company Car Section -->
+                                    <Expander HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
+                                              Margin="0,4,0,0" Padding="0">
+                                        <Expander.Header>
+                                            <TextBlock Text="Company Car"
+                                                       Style="{ThemeResource BodyStrongTextBlockStyle}"/>
+                                        </Expander.Header>
+                                        <Expander.Content>
+                                            <StackPanel Spacing="4" Padding="0,8,0,4">
+                                                <CheckBox Content="I have a company car from this employer"
+                                                          IsChecked="{Binding HasCompanyCar, Mode=TwoWay}"/>
+                                                <StackPanel Visibility="{Binding HasCompanyCar, Converter={StaticResource BoolToVis}}" Spacing="4">
+                                                    <Grid ColumnDefinitions="*,*">
+                                                        <NumberBox Header="Car List Price (P11D value) (£)"
+                                                                   Value="{Binding CarListPrice, Mode=TwoWay}"
+                                                                   NumberFormatter="{StaticResource CurrencyFormatter}"
+                                                                   SpinButtonPlacementMode="Compact" SmallChange="1000" LargeChange="5000"
+                                                                   Margin="0,0,8,8" Minimum="0"/>
+                                                        <NumberBox Grid.Column="1" Header="CO2 Emissions (g/km)"
+                                                                   Value="{Binding CarCO2Emissions, Mode=TwoWay}"
+                                                                   NumberFormatter="{StaticResource WholeNumberFormatter}"
+                                                                   SpinButtonPlacementMode="Compact" SmallChange="1" LargeChange="10"
+                                                                   Margin="0,0,0,8" Minimum="0"/>
+                                                    </Grid>
+                                                    <CheckBox Content="Electric/Zero emissions vehicle"
+                                                              IsChecked="{Binding CarIsElectric, Mode=TwoWay}"/>
+                                                    <NumberBox Header="Employer-provided fuel benefit (enter 1 if yes, 0 if no)"
+                                                               Value="{Binding CarFuelBenefit, Mode=TwoWay}"
+                                                               NumberFormatter="{StaticResource WholeNumberFormatter}"
+                                                               SpinButtonPlacementMode="Compact" SmallChange="1" LargeChange="1"
+                                                               Minimum="0" Maximum="1" MaxWidth="300" HorizontalAlignment="Left"
+                                                               Margin="0,0,0,8"/>
+                                                    <TextBlock Text="BIK percentage is calculated from CO2 emissions. The benefit value is added to your taxable income automatically."
+                                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                                               Style="{ThemeResource CaptionTextBlockStyle}" TextWrapping="Wrap"/>
+                                                </StackPanel>
+                                            </StackPanel>
+                                        </Expander.Content>
+                                    </Expander>
+
                                     <!-- Allowable Expenses Section -->
                                     <Expander HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
                                               Margin="0,4,0,0" Padding="0">
@@ -131,7 +169,6 @@
                                         </Expander.Header>
                                         <Expander.Content>
                                             <StackPanel Spacing="4" Padding="0,8,0,4">
-                                                <!-- WFH and Mileage -->
                                                 <Grid ColumnDefinitions="*,*">
                                                     <NumberBox Header="Working from Home (weeks)"
                                                                Value="{Binding WorkFromHomeWeeks, Mode=TwoWay}"
@@ -151,7 +188,6 @@
                                                            Style="{ThemeResource CaptionTextBlockStyle}" TextWrapping="Wrap"
                                                            Margin="0,0,0,8"/>
 
-                                                <!-- Professional Subscriptions and Uniform -->
                                                 <Grid ColumnDefinitions="*,*">
                                                     <NumberBox Header="Professional Subscriptions (£)"
                                                                Value="{Binding ProfessionalSubscriptions, Mode=TwoWay}"
@@ -171,7 +207,6 @@
                                                            Style="{ThemeResource CaptionTextBlockStyle}" TextWrapping="Wrap"
                                                            Margin="0,0,0,8"/>
 
-                                                <!-- Other Expenses -->
                                                 <Grid ColumnDefinitions="*,*">
                                                     <NumberBox Header="Other Allowable Expenses (£)"
                                                                Value="{Binding OtherExpenses, Mode=TwoWay}"
@@ -285,12 +320,170 @@
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
 
+            <!-- ═══════════ CAPITAL GAINS ═══════════ -->
+            <Grid Margin="0,8,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="Capital Gains" Style="{ThemeResource SubtitleTextBlockStyle}" VerticalAlignment="Center"/>
+                <Button Grid.Column="1" Click="AddCapitalGain_Click" Style="{ThemeResource AccentButtonStyle}">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <FontIcon Glyph="&#xE710;" FontSize="14"/>
+                        <TextBlock Text="Add Capital Gain"/>
+                    </StackPanel>
+                </Button>
+            </Grid>
+
+            <ItemsControl x:Name="CapitalGainsPanel">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Margin="0,0,0,8" Padding="16" CornerRadius="8"
+                                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1">
+                            <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*,*,Auto">
+                                <TextBox Header="Description (asset sold)"
+                                         Text="{Binding Description, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                         Margin="0,0,8,8" MinWidth="200"/>
+                                <NumberBox Grid.Column="1" Header="Gain Amount (£)"
+                                           Value="{Binding GainAmount, Mode=TwoWay}"
+                                           NumberFormatter="{StaticResource CurrencyFormatter}"
+                                           SpinButtonPlacementMode="Compact" SmallChange="100" LargeChange="1000"
+                                           Margin="0,0,8,8" Minimum="0"/>
+                                <Button Grid.Column="2" VerticalAlignment="Top" Margin="0,20,0,0"
+                                        Click="RemoveCapitalGain_Click" ToolTipService.ToolTip="Remove">
+                                    <FontIcon Glyph="&#xE74D;" FontSize="14" Foreground="{ThemeResource SystemFillColorCriticalBrush}"/>
+                                </Button>
+                                <CheckBox Grid.Row="1" Grid.ColumnSpan="2"
+                                          Content="Residential property disposal"
+                                          IsChecked="{Binding IsResidentialProperty, Mode=TwoWay}" Margin="0,4,0,0"/>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <Border x:Name="CapitalGainsLossesPanel" Padding="16" CornerRadius="8"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1"
+                    Visibility="Collapsed">
+                <NumberBox x:Name="CapitalGainsLossesBox" Header="Capital Losses to Offset (£)"
+                           NumberFormatter="{StaticResource CurrencyFormatter}"
+                           SpinButtonPlacementMode="Compact" SmallChange="100" LargeChange="1000"
+                           Minimum="0" MaxWidth="300" HorizontalAlignment="Left"/>
+            </Border>
+
+            <!-- ═══════════ RENTAL / PROPERTY INCOME ═══════════ -->
+            <TextBlock Text="Rental / Property Income" Style="{ThemeResource SubtitleTextBlockStyle}" Margin="0,8,0,0"/>
+            <Border Padding="16" CornerRadius="8"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1">
+                <StackPanel Spacing="8">
+                    <Grid ColumnDefinitions="*,*">
+                        <NumberBox x:Name="RentalIncomeBox" Header="Gross Rental Income (£)"
+                                   NumberFormatter="{StaticResource CurrencyFormatter}"
+                                   SpinButtonPlacementMode="Compact" SmallChange="100" LargeChange="1000"
+                                   Margin="0,0,8,0" Minimum="0"/>
+                        <NumberBox x:Name="RentalExpensesBox" Grid.Column="1" Header="Allowable Expenses (£)"
+                                   NumberFormatter="{StaticResource CurrencyFormatter}"
+                                   SpinButtonPlacementMode="Compact" SmallChange="100" LargeChange="1000"
+                                   Minimum="0"/>
+                    </Grid>
+                    <Grid ColumnDefinitions="*,*">
+                        <NumberBox x:Name="MortgageInterestBox" Header="Mortgage Interest (£)"
+                                   NumberFormatter="{StaticResource CurrencyFormatter}"
+                                   SpinButtonPlacementMode="Compact" SmallChange="100" LargeChange="1000"
+                                   Margin="0,0,8,0" Minimum="0"/>
+                        <CheckBox x:Name="UsePropertyAllowanceCheck" Grid.Column="1"
+                                  Content="Use £1,000 Property Allowance instead of expenses"
+                                  VerticalAlignment="Center"/>
+                    </Grid>
+                    <TextBlock Text="Mortgage interest gets 20% basic rate tax credit (not deducted from income). Property allowance: if income is under £1,000, use the allowance instead of claiming expenses."
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                               Style="{ThemeResource CaptionTextBlockStyle}" TextWrapping="Wrap"/>
+                </StackPanel>
+            </Border>
+
+            <!-- ═══════════ TRADING INCOME ═══════════ -->
+            <TextBlock Text="Trading / Self-Employment Income" Style="{ThemeResource SubtitleTextBlockStyle}" Margin="0,8,0,0"/>
+            <Border Padding="16" CornerRadius="8"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1">
+                <StackPanel Spacing="8">
+                    <Grid ColumnDefinitions="*,*">
+                        <NumberBox x:Name="TradingIncomeBox" Header="Gross Trading Income (£)"
+                                   NumberFormatter="{StaticResource CurrencyFormatter}"
+                                   SpinButtonPlacementMode="Compact" SmallChange="100" LargeChange="1000"
+                                   Margin="0,0,8,0" Minimum="0"/>
+                        <NumberBox x:Name="TradingExpensesBox" Grid.Column="1" Header="Trading Expenses (£)"
+                                   NumberFormatter="{StaticResource CurrencyFormatter}"
+                                   SpinButtonPlacementMode="Compact" SmallChange="100" LargeChange="1000"
+                                   Minimum="0"/>
+                    </Grid>
+                    <CheckBox x:Name="UseTradingAllowanceCheck"
+                              Content="Use £1,000 Trading Allowance instead of expenses"/>
+                    <TextBlock Text="For casual self-employment, eBay/marketplace selling, freelance work. If income is under £1,000, the trading allowance covers it entirely."
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                               Style="{ThemeResource CaptionTextBlockStyle}" TextWrapping="Wrap"/>
+                </StackPanel>
+            </Border>
+
             <!-- ═══════════ OTHER DETAILS ═══════════ -->
             <TextBlock Text="Other Details" Style="{ThemeResource SubtitleTextBlockStyle}" Margin="0,8,0,0"/>
             <Border Padding="16" CornerRadius="8"
                     Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                     BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1">
                 <StackPanel Spacing="12">
+                    <!-- Tax Code -->
+                    <Grid ColumnDefinitions="*,*">
+                        <TextBox x:Name="TaxCodeBox" Header="PAYE Tax Code (e.g. 1257L, S1257L, K497, BR)"
+                                 PlaceholderText="Enter your tax code to validate it"
+                                 Margin="0,0,8,0"/>
+                        <NumberBox x:Name="PriorYearTaxBox" Grid.Column="1"
+                                   Header="Prior Year Tax Collected via PAYE (£)"
+                                   NumberFormatter="{StaticResource CurrencyFormatter}"
+                                   SpinButtonPlacementMode="Compact" SmallChange="50" LargeChange="500"
+                                   Minimum="0" PlaceholderText="Tax owed from previous year"/>
+                    </Grid>
+                    <TextBlock Text="If HMRC is collecting underpaid tax from a previous year through your tax code, enter the amount here. This is usually shown on your P2 coding notice. It will be subtracted from your PAYE payments when calculating this year's over/underpayment."
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                               Style="{ThemeResource CaptionTextBlockStyle}" TextWrapping="Wrap"/>
+
+                    <Border Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="0,4"/>
+
+                    <!-- Student Loans -->
+                    <TextBlock Text="Student Loans" Style="{ThemeResource BodyStrongTextBlockStyle}"/>
+                    <CheckBox x:Name="HasStudentLoanCheck" Content="I have a student loan"/>
+                    <StackPanel x:Name="StudentLoanPlanPanel" Visibility="Collapsed" Spacing="4" Margin="24,0,0,0">
+                        <RadioButtons x:Name="StudentLoanPlanRadios" Header="Student Loan Plan">
+                            <RadioButton x:Name="SLPlan1" Content="Plan 1 (started before Sept 2012, or NI/Scotland)"/>
+                            <RadioButton x:Name="SLPlan2" Content="Plan 2 (started Sept 2012 onwards, England/Wales)"/>
+                            <RadioButton x:Name="SLPlan4" Content="Plan 4 (Scotland, from Apr 2021)"/>
+                            <RadioButton x:Name="SLPlan5" Content="Plan 5 (started Sept 2023 onwards)"/>
+                        </RadioButtons>
+                    </StackPanel>
+                    <CheckBox x:Name="HasPostgraduateLoanCheck" Content="I have a postgraduate loan"/>
+
+                    <Border Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="0,4"/>
+
+                    <!-- Child Benefit / HICBC -->
+                    <TextBlock Text="Child Benefit" Style="{ThemeResource BodyStrongTextBlockStyle}"/>
+                    <Grid ColumnDefinitions="*,*">
+                        <NumberBox x:Name="NumberOfChildrenBox" Header="Number of Children"
+                                   NumberFormatter="{StaticResource WholeNumberFormatter}"
+                                   SpinButtonPlacementMode="Compact" SmallChange="1" LargeChange="1"
+                                   Margin="0,0,8,0" Minimum="0" Maximum="20"/>
+                        <NumberBox x:Name="ChildBenefitAmountBox" Grid.Column="1" Header="Annual Child Benefit Received (£)"
+                                   NumberFormatter="{StaticResource CurrencyFormatter}"
+                                   SpinButtonPlacementMode="Compact" SmallChange="100" LargeChange="500"
+                                   Minimum="0" PlaceholderText="Leave 0 to auto-calculate"/>
+                    </Grid>
+                    <TextBlock Text="If income exceeds £60,000 (2024/25+) or £50,000 (2023/24), you may owe the High Income Child Benefit Charge. Leave amount at 0 to use standard weekly rates."
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                               Style="{ThemeResource CaptionTextBlockStyle}" TextWrapping="Wrap"/>
+
+                    <Border Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="0,4"/>
+
                     <CheckBox x:Name="MarriageAllowanceCheck" Content="Claim Marriage Allowance"
                               IsChecked="{Binding ClaimMarriageAllowance, Mode=TwoWay}" Checked="MarriageAllowance_Changed" Unchecked="MarriageAllowance_Changed"/>
                     <RadioButtons x:Name="MarriageDirectionPanel" Header="Marriage Allowance Direction"
@@ -311,10 +504,40 @@
                                SpinButtonPlacementMode="Compact" SmallChange="10" LargeChange="100"
                                Minimum="0" MaxWidth="300" HorizontalAlignment="Left"/>
 
+                    <Border Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="0,8,0,8"/>
+
+                    <!-- Investment Reliefs -->
+                    <Expander HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
+                        <Expander.Header>
+                            <TextBlock Text="Investment Tax Reliefs (EIS / SEIS / VCT)" Style="{ThemeResource BodyStrongTextBlockStyle}"/>
+                        </Expander.Header>
+                        <Expander.Content>
+                            <StackPanel Spacing="8" Padding="0,8,0,4">
+                                <Grid ColumnDefinitions="*,*,*">
+                                    <NumberBox x:Name="EisBox" Header="EIS Investment (£)"
+                                               NumberFormatter="{StaticResource CurrencyFormatter}"
+                                               SpinButtonPlacementMode="Compact" SmallChange="1000" LargeChange="5000"
+                                               Margin="0,0,8,0" Minimum="0"/>
+                                    <NumberBox x:Name="SeisBox" Grid.Column="1" Header="SEIS Investment (£)"
+                                               NumberFormatter="{StaticResource CurrencyFormatter}"
+                                               SpinButtonPlacementMode="Compact" SmallChange="1000" LargeChange="5000"
+                                               Margin="0,0,8,0" Minimum="0"/>
+                                    <NumberBox x:Name="VctBox" Grid.Column="2" Header="VCT Investment (£)"
+                                               NumberFormatter="{StaticResource CurrencyFormatter}"
+                                               SpinButtonPlacementMode="Compact" SmallChange="1000" LargeChange="5000"
+                                               Minimum="0"/>
+                                </Grid>
+                                <TextBlock Text="EIS: 30% relief. SEIS: 50% relief. VCT: 30% relief. Deducted from income tax liability. Shares must be held for minimum period."
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                           Style="{ThemeResource CaptionTextBlockStyle}" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </Expander.Content>
+                    </Expander>
+
                     <!-- Pension Tax Credit Section -->
                     <Border Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="0,8,0,8"/>
                     <TextBlock Text="Personal Pension Tax Credit" Style="{ThemeResource BodyStrongTextBlockStyle}"/>
-                    <TextBlock Text="💡 Different from workplace pensions above! This is for personal pensions (SIPPs, stakeholder pensions) paid from your bank account."
+                    <TextBlock Text="Different from workplace pensions above! This is for personal pensions (SIPPs, stakeholder pensions) paid from your bank account."
                                Foreground="{ThemeResource SystemFillColorCautionBrush}"
                                Style="{ThemeResource CaptionTextBlockStyle}" TextWrapping="Wrap"
                                Margin="0,4,0,8"/>
@@ -328,9 +551,9 @@
                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                                Style="{ThemeResource CaptionTextBlockStyle}">
                         <Run Text="Enter the amount YOU paid into personal pensions (the amount that left your bank account)."/><LineBreak/>
-                        <Run Text="• Your pension provider already adds 20% basic rate relief automatically"/><LineBreak/>
-                        <Run Text="• Higher rate (40%) and additional rate (45%) taxpayers can claim back extra relief"/><LineBreak/>
-                        <Run Text="• Do NOT include workplace pension contributions (enter those above under each employment)"/>
+                        <Run Text="Your pension provider already adds 20% basic rate relief automatically"/><LineBreak/>
+                        <Run Text="Higher rate (40%) and additional rate (45%) taxpayers can claim back extra relief"/><LineBreak/>
+                        <Run Text="Do NOT include workplace pension contributions (enter those above under each employment)"/>
                     </TextBlock>
                 </StackPanel>
             </Border>
@@ -361,6 +584,10 @@
                         <TextBlock Text="Total Benefits in Kind:"/>
                         <TextBlock x:Name="ResBIK" Grid.Column="1" FontWeight="SemiBold"/>
                     </Grid>
+                    <Grid x:Name="ResCompanyCarRow" ColumnDefinitions="*,Auto" Visibility="Collapsed">
+                        <TextBlock Text="  (incl. Company Car BIK):" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                        <TextBlock x:Name="ResCompanyCar" Grid.Column="1" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                    </Grid>
                     <Grid x:Name="ResPensionRow" ColumnDefinitions="*,Auto" Visibility="Collapsed">
                         <TextBlock Text="Pension Contributions (tax relief):"/>
                         <TextBlock x:Name="ResPension" Grid.Column="1" FontWeight="SemiBold"/>
@@ -372,6 +599,14 @@
                     <TextBlock x:Name="ResExpensesBreakdown" Visibility="Collapsed"
                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                                Style="{ThemeResource CaptionTextBlockStyle}" Margin="12,0,0,0"/>
+                    <Grid x:Name="ResRentalRow" ColumnDefinitions="*,Auto" Visibility="Collapsed">
+                        <TextBlock Text="Rental/Property Income (taxable):"/>
+                        <TextBlock x:Name="ResRental" Grid.Column="1" FontWeight="SemiBold"/>
+                    </Grid>
+                    <Grid x:Name="ResTradingRow" ColumnDefinitions="*,Auto" Visibility="Collapsed">
+                        <TextBlock Text="Trading Income (taxable):"/>
+                        <TextBlock x:Name="ResTrading" Grid.Column="1" FontWeight="SemiBold"/>
+                    </Grid>
                     <Grid ColumnDefinitions="*,Auto">
                         <TextBlock Text="Taxable Savings Interest:"/>
                         <TextBlock x:Name="ResSavings" Grid.Column="1" FontWeight="SemiBold"/>
@@ -403,10 +638,18 @@
                         <TextBlock Text="Marriage Allowance Credit:"/>
                         <TextBlock x:Name="ResMarriage" Grid.Column="1"/>
                     </Grid>
+                    <Grid x:Name="ResMortgageReliefRow" ColumnDefinitions="*,Auto" Visibility="Collapsed">
+                        <TextBlock Text="Mortgage Interest Relief (20% credit):"/>
+                        <TextBlock x:Name="ResMortgageRelief" Grid.Column="1" Foreground="{ThemeResource SystemFillColorSuccessBrush}"/>
+                    </Grid>
+                    <Grid x:Name="ResInvestmentReliefRow" ColumnDefinitions="*,Auto" Visibility="Collapsed">
+                        <TextBlock Text="Investment Relief (EIS/SEIS/VCT):"/>
+                        <TextBlock x:Name="ResInvestmentRelief" Grid.Column="1" Foreground="{ThemeResource SystemFillColorSuccessBrush}"/>
+                    </Grid>
 
                     <Border Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="0,6"/>
 
-                    <!-- Tax Breakdown (dynamic - supports Scottish and rUK bands) -->
+                    <!-- Tax Breakdown -->
                     <TextBlock x:Name="ResTaxBreakdownHeader" Text="Income Tax Breakdown" FontWeight="SemiBold" Margin="0,4,0,4"/>
                     <ItemsControl x:Name="TaxBreakdownItems">
                         <ItemsControl.ItemTemplate>
@@ -431,6 +674,14 @@
                         <TextBlock Text="Total Tax Paid (PAYE):" FontSize="16"/>
                         <TextBlock x:Name="ResTotalTaxPaid" Grid.Column="1" FontSize="16"/>
                     </Grid>
+                    <Grid x:Name="ResPriorYearTaxRow" ColumnDefinitions="*,Auto" Visibility="Collapsed">
+                        <TextBlock Text="Less: Prior Year Tax Collected via PAYE:" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                        <TextBlock x:Name="ResPriorYearTax" Grid.Column="1" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                    </Grid>
+                    <Grid x:Name="ResEffectiveTaxPaidRow" ColumnDefinitions="*,Auto" Visibility="Collapsed">
+                        <TextBlock Text="Effective Tax Paid (this year):" FontSize="16" FontWeight="SemiBold"/>
+                        <TextBlock x:Name="ResEffectiveTaxPaid" Grid.Column="1" FontSize="16" FontWeight="SemiBold"/>
+                    </Grid>
 
                     <Border Height="2" Background="{ThemeResource AccentFillColorDefaultBrush}" Margin="0,8"/>
 
@@ -452,6 +703,90 @@
                         <TextBlock x:Name="ResExpectedNI" Grid.Column="1"/>
                     </Grid>
 
+                    <!-- Student Loan Section -->
+                    <Border x:Name="ResStudentLoanSection" Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="0,8" Visibility="Collapsed"/>
+                    <StackPanel x:Name="ResStudentLoanPanel" Visibility="Collapsed" Spacing="4">
+                        <TextBlock Text="Student Loan Repayments" FontWeight="SemiBold" Margin="0,4,0,4"/>
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBlock Text="Annual Repayment:"/>
+                            <TextBlock x:Name="ResStudentLoan" Grid.Column="1" FontWeight="SemiBold"/>
+                        </Grid>
+                        <TextBlock x:Name="ResStudentLoanInfo" TextWrapping="Wrap"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                   Style="{ThemeResource CaptionTextBlockStyle}" Margin="0,4,0,0"/>
+                    </StackPanel>
+
+                    <!-- Child Benefit Charge Section -->
+                    <Border x:Name="ResChildBenefitSection" Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="0,8" Visibility="Collapsed"/>
+                    <StackPanel x:Name="ResChildBenefitPanel" Visibility="Collapsed" Spacing="4">
+                        <TextBlock Text="High Income Child Benefit Charge" FontWeight="SemiBold" Margin="0,4,0,4"/>
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBlock Text="HICBC Charge:"/>
+                            <TextBlock x:Name="ResChildBenefit" Grid.Column="1" FontWeight="SemiBold"
+                                       Foreground="{ThemeResource SystemFillColorCriticalBrush}"/>
+                        </Grid>
+                        <Expander HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Margin="0,4,0,0">
+                            <Expander.Header>
+                                <TextBlock Text="View Details" Style="{ThemeResource BodyTextBlockStyle}"/>
+                            </Expander.Header>
+                            <Expander.Content>
+                                <TextBlock x:Name="ResChildBenefitInfo" TextWrapping="Wrap"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                           Style="{ThemeResource BodyTextBlockStyle}" Padding="0,8"/>
+                            </Expander.Content>
+                        </Expander>
+                    </StackPanel>
+
+                    <!-- Capital Gains Tax Section -->
+                    <Border x:Name="ResCGTSection" Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="0,8" Visibility="Collapsed"/>
+                    <StackPanel x:Name="ResCGTPanel" Visibility="Collapsed" Spacing="4">
+                        <TextBlock Text="Capital Gains Tax" FontWeight="SemiBold" Margin="0,4,0,4"/>
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBlock Text="CGT Due:"/>
+                            <TextBlock x:Name="ResCGT" Grid.Column="1" FontWeight="SemiBold"/>
+                        </Grid>
+                        <Expander HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Margin="0,4,0,0">
+                            <Expander.Header>
+                                <TextBlock Text="View CGT Breakdown" Style="{ThemeResource BodyTextBlockStyle}"/>
+                            </Expander.Header>
+                            <Expander.Content>
+                                <TextBlock x:Name="ResCGTInfo" TextWrapping="Wrap"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                           Style="{ThemeResource BodyTextBlockStyle}" Padding="0,8"/>
+                            </Expander.Content>
+                        </Expander>
+                    </StackPanel>
+
+                    <!-- Pension Annual Allowance Charge Section -->
+                    <Border x:Name="ResPensionAACSection" Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="0,8" Visibility="Collapsed"/>
+                    <StackPanel x:Name="ResPensionAACPanel" Visibility="Collapsed" Spacing="4">
+                        <TextBlock Text="Pension Annual Allowance Charge" FontWeight="SemiBold" Margin="0,4,0,4"
+                                   Foreground="{ThemeResource SystemFillColorCriticalBrush}"/>
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBlock Text="AAC Charge:"/>
+                            <TextBlock x:Name="ResPensionAAC" Grid.Column="1" FontWeight="SemiBold"
+                                       Foreground="{ThemeResource SystemFillColorCriticalBrush}"/>
+                        </Grid>
+                        <Expander HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Margin="0,4,0,0">
+                            <Expander.Header>
+                                <TextBlock Text="View Details" Style="{ThemeResource BodyTextBlockStyle}"/>
+                            </Expander.Header>
+                            <Expander.Content>
+                                <TextBlock x:Name="ResPensionAACInfo" TextWrapping="Wrap"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                           Style="{ThemeResource BodyTextBlockStyle}" Padding="0,8"/>
+                            </Expander.Content>
+                        </Expander>
+                    </StackPanel>
+
+                    <!-- Tax Code Validation Section -->
+                    <Border x:Name="ResTaxCodeSection" Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="0,8" Visibility="Collapsed"/>
+                    <StackPanel x:Name="ResTaxCodePanel" Visibility="Collapsed" Spacing="4">
+                        <TextBlock Text="Tax Code Validation" FontWeight="SemiBold" Margin="0,4,0,4"/>
+                        <TextBlock x:Name="ResTaxCodeInfo" TextWrapping="Wrap"
+                                   Style="{ThemeResource BodyTextBlockStyle}"/>
+                    </StackPanel>
+
                     <!-- Pension Tax Credit Section -->
                     <Border x:Name="ResPensionTaxCreditSection" Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="0,8" Visibility="Collapsed"/>
                     <StackPanel x:Name="ResPensionTaxCreditPanel" Visibility="Collapsed" Spacing="4">
@@ -469,11 +804,38 @@
                                 <TextBlock Text="View Details &amp; How to Claim" Style="{ThemeResource BodyTextBlockStyle}"/>
                             </Expander.Header>
                             <Expander.Content>
-                                <TextBlock x:Name="ResPensionCreditInfo" TextWrapping="Wrap" 
+                                <TextBlock x:Name="ResPensionCreditInfo" TextWrapping="Wrap"
                                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                                            Style="{ThemeResource BodyTextBlockStyle}" Padding="0,8"/>
                             </Expander.Content>
                         </Expander>
+                    </StackPanel>
+
+                    <!-- Company Car Details -->
+                    <Border x:Name="ResCompanyCarSection" Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="0,8" Visibility="Collapsed"/>
+                    <StackPanel x:Name="ResCompanyCarPanel" Visibility="Collapsed" Spacing="4">
+                        <TextBlock Text="Company Car Benefit Details" FontWeight="SemiBold" Margin="0,4,0,4"/>
+                        <TextBlock x:Name="ResCompanyCarInfo" TextWrapping="Wrap"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                   Style="{ThemeResource BodyTextBlockStyle}"/>
+                    </StackPanel>
+
+                    <!-- Investment Relief Details -->
+                    <Border x:Name="ResInvestmentSection" Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="0,8" Visibility="Collapsed"/>
+                    <StackPanel x:Name="ResInvestmentPanel" Visibility="Collapsed" Spacing="4">
+                        <TextBlock Text="Investment Relief Details" FontWeight="SemiBold" Margin="0,4,0,4"/>
+                        <TextBlock x:Name="ResInvestmentInfo" TextWrapping="Wrap"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                   Style="{ThemeResource BodyTextBlockStyle}"/>
+                    </StackPanel>
+
+                    <!-- Rental Income Details -->
+                    <Border x:Name="ResRentalSection" Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="0,8" Visibility="Collapsed"/>
+                    <StackPanel x:Name="ResRentalPanel" Visibility="Collapsed" Spacing="4">
+                        <TextBlock Text="Rental Income Details" FontWeight="SemiBold" Margin="0,4,0,4"/>
+                        <TextBlock x:Name="ResRentalInfo" TextWrapping="Wrap"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                   Style="{ThemeResource BodyTextBlockStyle}"/>
                     </StackPanel>
 
                     <!-- Summary -->

@@ -191,6 +191,18 @@ namespace PAYETAXCalc.Services
                 row++;
             }
 
+            void AddTextRow(string label, string value, bool bold = false)
+            {
+                ws.Cell(row, 1).Value = label;
+                ws.Cell(row, 2).Value = value;
+                if (bold)
+                {
+                    ws.Cell(row, 1).Style.Font.Bold = true;
+                    ws.Cell(row, 2).Style.Font.Bold = true;
+                }
+                row++;
+            }
+
             ws.Cell(row, 1).Value = "Tax Regime:";
             ws.Cell(row, 2).Value = regime;
             ws.Cell(row, 1).Style.Font.Bold = true;
@@ -203,10 +215,16 @@ namespace PAYETAXCalc.Services
 
             AddRow("Total Employment/Pension Income", r.TotalEmploymentIncome);
             AddRow("Total Benefits in Kind", r.TotalBenefitsInKind);
+            if (r.TotalCompanyCarBenefit > 0)
+                AddRow("  (incl. Company Car BIK)", r.TotalCompanyCarBenefit);
             if (r.TotalPensionContributions > 0)
                 AddRow("Pension Contributions (deducted)", -r.TotalPensionContributions);
             if (r.TotalEmploymentExpenses > 0)
                 AddRow("Allowable Employment Expenses", -r.TotalEmploymentExpenses);
+            if (r.RentalTaxableIncome > 0)
+                AddRow("Rental/Property Income (taxable)", r.RentalTaxableIncome);
+            if (r.TradingTaxableIncome > 0)
+                AddRow("Trading Income (taxable)", r.TradingTaxableIncome);
             AddRow("Taxable Savings Interest", r.TotalSavingsInterest);
             if (r.TotalTaxFreeSavings > 0)
                 AddRow("Tax-Free Savings (ISA)", r.TotalTaxFreeSavings);
@@ -218,6 +236,10 @@ namespace PAYETAXCalc.Services
                 AddRow("Gift Aid Band Extension", r.GiftAidExtension);
             if (r.MarriageAllowanceCredit > 0)
                 AddRow("Marriage Allowance Credit", -r.MarriageAllowanceCredit);
+            if (r.MortgageInterestRelief > 0)
+                AddRow("Mortgage Interest Relief (20%)", -r.MortgageInterestRelief);
+            if (r.TotalInvestmentRelief > 0)
+                AddRow("Investment Relief (EIS/SEIS/VCT)", -r.TotalInvestmentRelief);
 
             row++;
             ws.Cell(row, 1).Value = $"Tax Breakdown ({regime} rates)";
@@ -236,6 +258,11 @@ namespace PAYETAXCalc.Services
             row++;
             AddRow("Total Income Tax Due", r.TotalIncomeTaxDue, bold: true);
             AddRow("Total Tax Paid (PAYE)", r.TotalTaxPaidViaPAYE);
+            if (r.PriorYearTaxCollected > 0)
+            {
+                AddRow("Less: Prior Year Tax Collected via PAYE", -r.PriorYearTaxCollected);
+                AddRow("Effective Tax Paid (this year)", r.TotalTaxPaidViaPAYE - r.PriorYearTaxCollected);
+            }
             AddRow("Difference (Over/Under Payment)", r.TaxOverUnderPayment, bold: true);
 
             row++;
@@ -245,6 +272,58 @@ namespace PAYETAXCalc.Services
             row++;
             AddRow("Total NI Paid", r.TotalNIPaid);
             AddRow("Expected NI", r.ExpectedNI);
+
+            // Student Loan
+            if (r.StudentLoanRepayment > 0)
+            {
+                row++;
+                ws.Cell(row, 1).Value = "Student Loan Repayments";
+                ws.Cell(row, 1).Style.Font.Bold = true;
+                ws.Cell(row, 1).Style.Font.FontSize = 12;
+                row++;
+                AddRow("Annual Repayment", r.StudentLoanRepayment);
+            }
+
+            // HICBC
+            if (r.ChildBenefitCharge > 0)
+            {
+                row++;
+                ws.Cell(row, 1).Value = "High Income Child Benefit Charge";
+                ws.Cell(row, 1).Style.Font.Bold = true;
+                ws.Cell(row, 1).Style.Font.FontSize = 12;
+                row++;
+                AddRow("HICBC Charge", r.ChildBenefitCharge);
+            }
+
+            // CGT
+            if (r.CapitalGainsTax > 0)
+            {
+                row++;
+                ws.Cell(row, 1).Value = "Capital Gains Tax";
+                ws.Cell(row, 1).Style.Font.Bold = true;
+                ws.Cell(row, 1).Style.Font.FontSize = 12;
+                row++;
+                AddRow("Total Gains", r.TotalCapitalGains);
+                AddRow("CGT Due", r.CapitalGainsTax);
+            }
+
+            // Pension AAC
+            if (r.PensionAnnualAllowanceCharge > 0)
+            {
+                row++;
+                ws.Cell(row, 1).Value = "Pension Annual Allowance Charge";
+                ws.Cell(row, 1).Style.Font.Bold = true;
+                ws.Cell(row, 1).Style.Font.FontSize = 12;
+                row++;
+                AddRow("AAC Charge", r.PensionAnnualAllowanceCharge);
+            }
+
+            // Tax Code
+            if (!string.IsNullOrEmpty(r.TaxCodeValidation))
+            {
+                row++;
+                AddTextRow("Tax Code Validation", r.TaxCodeValidation);
+            }
 
             row += 2;
             ws.Cell(row, 1).Value = r.Summary;
@@ -394,11 +473,19 @@ namespace PAYETAXCalc.Services
                                 ResultRow("Pension Contributions", $"-£{result.TotalPensionContributions:N2}");
                             if (result.TotalEmploymentExpenses > 0)
                                 ResultRow("Allowable Expenses", $"-£{result.TotalEmploymentExpenses:N2}");
+                            if (result.RentalTaxableIncome > 0)
+                                ResultRow("Rental Income (taxable)", $"£{result.RentalTaxableIncome:N2}");
+                            if (result.TradingTaxableIncome > 0)
+                                ResultRow("Trading Income (taxable)", $"£{result.TradingTaxableIncome:N2}");
                             ResultRow("Taxable Savings Interest", $"£{result.TotalSavingsInterest:N2}");
                             if (result.TotalDividendIncome > 0)
                                 ResultRow("Dividend Income", $"£{result.TotalDividendIncome:N2}");
                             ResultRow("Gross Taxable Income", $"£{result.GrossIncome:N2}", bold: true);
                             ResultRow("Personal Allowance Used", $"£{result.PersonalAllowanceUsed:N2}");
+                            if (result.MortgageInterestRelief > 0)
+                                ResultRow("Mortgage Interest Relief", $"-£{result.MortgageInterestRelief:N2}");
+                            if (result.TotalInvestmentRelief > 0)
+                                ResultRow("Investment Relief", $"-£{result.TotalInvestmentRelief:N2}");
                         });
 
                         // Tax breakdown
@@ -439,6 +526,11 @@ namespace PAYETAXCalc.Services
 
                             TotalRow("Total Income Tax Due", $"£{result.TotalIncomeTaxDue:N2}", bold: true);
                             TotalRow("Total Tax Paid (PAYE)", $"£{result.TotalTaxPaidViaPAYE:N2}");
+                            if (result.PriorYearTaxCollected > 0)
+                            {
+                                TotalRow("Less: Prior Year Tax via PAYE", $"-£{result.PriorYearTaxCollected:N2}");
+                                TotalRow("Effective Tax Paid (this year)", $"£{result.TotalTaxPaidViaPAYE - result.PriorYearTaxCollected:N2}");
+                            }
 
                             string diffLabel = result.TaxOverUnderPayment > 0 ? "Tax Underpaid" :
                                               result.TaxOverUnderPayment < 0 ? "Tax Overpaid (refund due)" : "Difference";
@@ -448,6 +540,31 @@ namespace PAYETAXCalc.Services
                         // NI
                         col.Item().PaddingTop(10).Text("National Insurance").FontSize(11).Bold();
                         col.Item().Text($"NI Paid: £{result.TotalNIPaid:N2}  |  Expected NI: £{result.ExpectedNI:N2}");
+
+                        // Additional sections
+                        if (result.StudentLoanRepayment > 0)
+                        {
+                            col.Item().PaddingTop(10).Text("Student Loan Repayments").FontSize(11).Bold();
+                            col.Item().Text($"Annual Repayment: £{result.StudentLoanRepayment:N2}");
+                        }
+
+                        if (result.ChildBenefitCharge > 0)
+                        {
+                            col.Item().PaddingTop(10).Text("High Income Child Benefit Charge").FontSize(11).Bold();
+                            col.Item().Text($"HICBC Charge: £{result.ChildBenefitCharge:N2}");
+                        }
+
+                        if (result.CapitalGainsTax > 0)
+                        {
+                            col.Item().PaddingTop(10).Text("Capital Gains Tax").FontSize(11).Bold();
+                            col.Item().Text($"CGT Due: £{result.CapitalGainsTax:N2}");
+                        }
+
+                        if (result.PensionAnnualAllowanceCharge > 0)
+                        {
+                            col.Item().PaddingTop(10).Text("Pension Annual Allowance Charge").FontSize(11).Bold();
+                            col.Item().Text($"AAC Charge: £{result.PensionAnnualAllowanceCharge:N2}");
+                        }
 
                         // Summary
                         col.Item().PaddingTop(15).Background(Colors.Grey.Lighten4).Padding(10).Text(result.Summary).Italic();
@@ -502,6 +619,9 @@ namespace PAYETAXCalc.Services
                     if (emp.BenefitsInKind > 0 || emp.PensionContributions > 0)
                         body.Append(CreateParagraph(
                             $"  BIK: £{emp.BenefitsInKind:N2}  |  Pension Contributions: £{emp.PensionContributions:N2}"));
+                    if (emp.HasCompanyCar && emp.CarListPrice > 0)
+                        body.Append(CreateParagraph(
+                            $"  Company Car: List £{emp.CarListPrice:N0}, CO2 {emp.CarCO2Emissions}g/km"));
                     if (emp.WorkFromHomeWeeks > 0 || emp.BusinessMiles > 0 ||
                         emp.ProfessionalSubscriptions > 0 || emp.UniformAllowance > 0 || emp.OtherExpenses > 0)
                         body.Append(CreateParagraph(
@@ -543,6 +663,10 @@ namespace PAYETAXCalc.Services
                 body.Append(CreateParagraph("Blind Person's Allowance: Claimed"));
             if (data.GiftAidDonations > 0)
                 body.Append(CreateParagraph($"Gift Aid Donations: £{data.GiftAidDonations:N2}"));
+            if (data.RentalIncome > 0)
+                body.Append(CreateParagraph($"Rental Income: £{data.RentalIncome:N2} (Taxable: £{result.RentalTaxableIncome:N2})"));
+            if (data.TradingIncome > 0)
+                body.Append(CreateParagraph($"Trading Income: £{data.TradingIncome:N2} (Taxable: £{result.TradingTaxableIncome:N2})"));
 
             // Results
             body.Append(CreateParagraph(""));
@@ -579,6 +703,11 @@ namespace PAYETAXCalc.Services
             body.Append(CreateParagraph(""));
             body.Append(CreateParagraph($"Total Income Tax Due: £{result.TotalIncomeTaxDue:N2}", bold: true, fontSize: 24));
             body.Append(CreateParagraph($"Total Tax Paid (PAYE): £{result.TotalTaxPaidViaPAYE:N2}", fontSize: 22));
+            if (result.PriorYearTaxCollected > 0)
+            {
+                body.Append(CreateParagraph($"Less: Prior Year Tax Collected via PAYE: -£{result.PriorYearTaxCollected:N2}", color: "666666"));
+                body.Append(CreateParagraph($"Effective Tax Paid (this year): £{result.TotalTaxPaidViaPAYE - result.PriorYearTaxCollected:N2}", fontSize: 22));
+            }
 
             string diffLabel = result.TaxOverUnderPayment > 0 ? "Tax Underpaid" :
                               result.TaxOverUnderPayment < 0 ? "Tax Overpaid (refund due)" : "Difference";
@@ -590,6 +719,35 @@ namespace PAYETAXCalc.Services
             body.Append(CreateParagraph(""));
             body.Append(CreateParagraph("National Insurance", bold: true, fontSize: 22));
             body.Append(CreateParagraph($"NI Paid: £{result.TotalNIPaid:N2}  |  Expected NI: £{result.ExpectedNI:N2}"));
+
+            // Additional sections
+            if (result.StudentLoanRepayment > 0)
+            {
+                body.Append(CreateParagraph(""));
+                body.Append(CreateParagraph("Student Loan Repayments", bold: true, fontSize: 22));
+                body.Append(CreateParagraph($"Annual Repayment: £{result.StudentLoanRepayment:N2}"));
+            }
+
+            if (result.ChildBenefitCharge > 0)
+            {
+                body.Append(CreateParagraph(""));
+                body.Append(CreateParagraph("High Income Child Benefit Charge", bold: true, fontSize: 22));
+                body.Append(CreateParagraph($"HICBC Charge: £{result.ChildBenefitCharge:N2}"));
+            }
+
+            if (result.CapitalGainsTax > 0)
+            {
+                body.Append(CreateParagraph(""));
+                body.Append(CreateParagraph("Capital Gains Tax", bold: true, fontSize: 22));
+                body.Append(CreateParagraph($"CGT Due: £{result.CapitalGainsTax:N2}"));
+            }
+
+            if (result.PensionAnnualAllowanceCharge > 0)
+            {
+                body.Append(CreateParagraph(""));
+                body.Append(CreateParagraph("Pension Annual Allowance Charge", bold: true, fontSize: 22));
+                body.Append(CreateParagraph($"AAC Charge: £{result.PensionAnnualAllowanceCharge:N2}"));
+            }
 
             // Summary
             body.Append(CreateParagraph(""));
