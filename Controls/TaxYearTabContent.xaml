@@ -75,6 +75,16 @@
                                           IsChecked="{Binding IsPensionOrAnnuity, Mode=TwoWay}"
                                           Margin="0,0,0,4"/>
 
+                                <!-- Combined Tax & NI option (active employment only) -->
+                                <CheckBox Content="I only have combined Tax &amp; NI figures"
+                                          IsChecked="{Binding IsCombinedTaxAndNI, Mode=TwoWay}"
+                                          Visibility="{Binding IsPensionOrAnnuity, Converter={StaticResource BoolToVis}, ConverterParameter=Invert}"
+                                          Margin="0,0,0,4"/>
+                                <TextBlock Text="NI will be estimated from your salary and deducted from the combined figure"
+                                           Visibility="{Binding IsCombinedTaxAndNI, Converter={StaticResource BoolToVis}}"
+                                           Foreground="{ThemeResource SystemFillColorCautionBrush}"
+                                           Style="{ThemeResource CaptionTextBlockStyle}" Margin="0,0,0,4"/>
+
                                 <!-- Income: Salary/Pension, Tax Paid -->
                                 <Grid ColumnDefinitions="*,*,Auto">
                                     <NumberBox Header="Gross Income (£)"
@@ -82,11 +92,18 @@
                                                NumberFormatter="{StaticResource CurrencyFormatter}"
                                                SpinButtonPlacementMode="Compact" SmallChange="100" LargeChange="1000"
                                                Margin="0,0,8,8" Minimum="0"/>
+                                    <NumberBox Grid.Column="1" Header="Tax &amp; NI Paid (£)"
+                                               Value="{Binding TaxPaid, Mode=TwoWay}"
+                                               NumberFormatter="{StaticResource CurrencyFormatter}"
+                                               SpinButtonPlacementMode="Compact" SmallChange="100" LargeChange="1000"
+                                               Margin="0,0,8,8" Minimum="0"
+                                               Visibility="{Binding IsCombinedTaxAndNI, Converter={StaticResource BoolToVis}}"/>
                                     <NumberBox Grid.Column="1" Header="Tax Paid (£)"
                                                Value="{Binding TaxPaid, Mode=TwoWay}"
                                                NumberFormatter="{StaticResource CurrencyFormatter}"
                                                SpinButtonPlacementMode="Compact" SmallChange="100" LargeChange="1000"
-                                               Margin="0,0,8,8" Minimum="0"/>
+                                               Margin="0,0,8,8" Minimum="0"
+                                               Visibility="{Binding IsCombinedTaxAndNI, Converter={StaticResource BoolToVis}, ConverterParameter=Invert}"/>
                                 </Grid>
 
                                 <!-- Active employment fields (hidden for pension/annuity) -->
@@ -99,7 +116,8 @@
                                                    Value="{Binding NationalInsurancePaid, Mode=TwoWay}"
                                                    NumberFormatter="{StaticResource CurrencyFormatter}"
                                                    SpinButtonPlacementMode="Compact" SmallChange="100" LargeChange="1000"
-                                                   Margin="0,0,8,8" Minimum="0"/>
+                                                   Margin="0,0,8,8" Minimum="0"
+                                                   Visibility="{Binding IsCombinedTaxAndNI, Converter={StaticResource BoolToVis}, ConverterParameter=Invert}"/>
                                         <NumberBox Grid.Column="1" Header="Benefits in Kind (£)"
                                                    Value="{Binding BenefitsInKind, Mode=TwoWay}"
                                                    NumberFormatter="{StaticResource CurrencyFormatter}"
@@ -702,6 +720,10 @@
                         <TextBlock Text="Expected NI:"/>
                         <TextBlock x:Name="ResExpectedNI" Grid.Column="1"/>
                     </Grid>
+                    <TextBlock x:Name="ResNIEstimationInfo" TextWrapping="Wrap"
+                               Foreground="{ThemeResource SystemFillColorCautionBrush}"
+                               Style="{ThemeResource CaptionTextBlockStyle}" Margin="0,4,0,0"
+                               Visibility="Collapsed"/>
 
                     <!-- Student Loan Section -->
                     <Border x:Name="ResStudentLoanSection" Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="0,8" Visibility="Collapsed"/>

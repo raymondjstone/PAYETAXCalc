@@ -77,6 +77,10 @@ namespace PAYETAXCalc.Models
         // Prior Year Tax
         private decimal _priorYearTaxCollected;
 
+        // NI Estimation (combined tax+NI)
+        private bool _hasSeparateNIFigures;
+        private string _niEstimationInfo = "";
+
         // Tax Code Validation
         private string _taxCodeValidation = "";
         private bool _taxCodeHasWarning;
@@ -153,6 +157,10 @@ namespace PAYETAXCalc.Models
 
         // Prior Year Tax
         public decimal PriorYearTaxCollected { get => _priorYearTaxCollected; set => SetProperty(ref _priorYearTaxCollected, value); }
+
+        // NI Estimation (combined tax+NI)
+        public bool HasSeparateNIFigures { get => _hasSeparateNIFigures; set => SetProperty(ref _hasSeparateNIFigures, value); }
+        public string NIEstimationInfo { get => _niEstimationInfo; set => SetProperty(ref _niEstimationInfo, value); }
 
         // Tax Code Validation
         public string TaxCodeValidation { get => _taxCodeValidation; set => SetProperty(ref _taxCodeValidation, value); }

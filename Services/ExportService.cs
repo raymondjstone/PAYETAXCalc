@@ -272,6 +272,12 @@ namespace PAYETAXCalc.Services
             row++;
             AddRow("Total NI Paid", r.TotalNIPaid);
             AddRow("Expected NI", r.ExpectedNI);
+            if (!string.IsNullOrEmpty(r.NIEstimationInfo))
+            {
+                ws.Cell(row, 1).Value = r.NIEstimationInfo;
+                ws.Cell(row, 1).Style.Font.Italic = true;
+                row++;
+            }
 
             // Student Loan
             if (r.StudentLoanRepayment > 0)
@@ -540,6 +546,8 @@ namespace PAYETAXCalc.Services
                         // NI
                         col.Item().PaddingTop(10).Text("National Insurance").FontSize(11).Bold();
                         col.Item().Text($"NI Paid: £{result.TotalNIPaid:N2}  |  Expected NI: £{result.ExpectedNI:N2}");
+                        if (!string.IsNullOrEmpty(result.NIEstimationInfo))
+                            col.Item().Text(result.NIEstimationInfo).FontSize(8).Italic();
 
                         // Additional sections
                         if (result.StudentLoanRepayment > 0)
@@ -719,6 +727,8 @@ namespace PAYETAXCalc.Services
             body.Append(CreateParagraph(""));
             body.Append(CreateParagraph("National Insurance", bold: true, fontSize: 22));
             body.Append(CreateParagraph($"NI Paid: £{result.TotalNIPaid:N2}  |  Expected NI: £{result.ExpectedNI:N2}"));
+            if (!string.IsNullOrEmpty(result.NIEstimationInfo))
+                body.Append(CreateParagraph(result.NIEstimationInfo, italic: true, fontSize: 18));
 
             // Additional sections
             if (result.StudentLoanRepayment > 0)

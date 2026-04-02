@@ -19,6 +19,7 @@ namespace PAYETAXCalc.Models
         private double _otherExpenses;
         private string _otherExpensesDescription = "";
         private bool _employmentEnded;
+        private bool _isCombinedTaxAndNI;
 
         // Company Car
         private bool _hasCompanyCar;
@@ -115,6 +116,12 @@ namespace PAYETAXCalc.Models
         {
             get => _employmentEnded;
             set => SetProperty(ref _employmentEnded, value);
+        }
+
+        public bool IsCombinedTaxAndNI
+        {
+            get => _isCombinedTaxAndNI;
+            set => SetProperty(ref _isCombinedTaxAndNI, value);
         }
 
         // Company Car

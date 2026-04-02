@@ -13,11 +13,36 @@ namespace PAYETAXCalc.Services
 
             // 1. Sum employment income
             decimal totalSalary = 0, totalBIK = 0, totalTaxPaid = 0, totalNIPaid = 0, totalPension = 0;
+            bool hasSeparateNI = false;
+            string niEstimationInfo = "";
             foreach (var emp in data.Employments)
             {
                 totalSalary += (decimal)emp.GrossSalary;
-                totalTaxPaid += (decimal)emp.TaxPaid;
-                totalNIPaid += (decimal)emp.NationalInsurancePaid;
+
+                if (emp.IsCombinedTaxAndNI && !emp.IsPensionOrAnnuity)
+                {
+                    // Estimate NI from salary, subtract from combined figure to get tax-only
+                    decimal salary = (decimal)emp.GrossSalary;
+                    decimal estimatedNI = EstimateNI(salary, rules);
+                    decimal combined = (decimal)emp.TaxPaid;
+                    decimal estimatedTax = Math.Max(0, combined - estimatedNI);
+                    totalTaxPaid += estimatedTax;
+                    totalNIPaid += estimatedNI;
+                    string name = string.IsNullOrWhiteSpace(emp.EmployerName) ? "Employment" : emp.EmployerName;
+                    niEstimationInfo += $"{name}: Combined £{combined:N2} split as estimated Tax £{estimatedTax:N2} + NI £{estimatedNI:N2}\n";
+                }
+                else if (emp.IsCombinedTaxAndNI && emp.IsPensionOrAnnuity)
+                {
+                    // Pensions have no NI, so combined figure is all tax
+                    totalTaxPaid += (decimal)emp.TaxPaid;
+                }
+                else
+                {
+                    totalTaxPaid += (decimal)emp.TaxPaid;
+                    totalNIPaid += (decimal)emp.NationalInsurancePaid;
+                    if (!emp.IsPensionOrAnnuity && (decimal)emp.NationalInsurancePaid > 0)
+                        hasSeparateNI = true;
+                }
 
                 if (!emp.IsPensionOrAnnuity)
                 {
@@ -25,6 +50,8 @@ namespace PAYETAXCalc.Services
                     totalPension += (decimal)emp.PensionContributions;
                 }
             }
+            result.HasSeparateNIFigures = hasSeparateNI;
+            result.NIEstimationInfo = niEstimationInfo.TrimEnd();
 
             // 1a. Company car BIK calculation
             decimal totalCarBenefit = CalculateCompanyCarBenefit(data, rules, result);
@@ -221,12 +248,19 @@ namespace PAYETAXCalc.Services
             if (totalExpenses > 0)
                 result.Summary += $"\nEmployment expenses of £{totalExpenses:N2} deducted from taxable income.";
 
-            decimal niDiff = totalNIPaid - expectedNI;
-            if (Math.Abs(niDiff) > 1)
+            if (result.HasSeparateNIFigures)
             {
-                result.Summary += niDiff > 0
-                    ? $"\nNI: You paid £{niDiff:N2} more than expected."
-                    : $"\nNI: You paid £{Math.Abs(niDiff):N2} less than expected.";
+                decimal niDiff = totalNIPaid - expectedNI;
+                if (Math.Abs(niDiff) > 1)
+                {
+                    result.Summary += niDiff > 0
+                        ? $"\nNI: You paid £{niDiff:N2} more than expected."
+                        : $"\nNI: You paid £{Math.Abs(niDiff):N2} less than expected.";
+                }
+            }
+            else if (!string.IsNullOrEmpty(result.NIEstimationInfo))
+            {
+                result.Summary += "\nNI: Estimated from combined tax & NI figures (see breakdown above).";
             }
 
             if (result.CanClaimPensionTaxCredit && result.PensionTaxCreditClaimable > 0)
@@ -1113,6 +1147,14 @@ namespace PAYETAXCalc.Services
 
             result.TaxCodeValidation = string.Join("\n", infoLines);
             result.TaxCodeHasWarning = hasWarning;
+        }
+
+        private static decimal EstimateNI(decimal salary, TaxYearRules rules)
+        {
+            if (salary <= rules.NICPrimaryThreshold) return 0;
+            decimal nicableAtMain = Math.Min(salary, rules.NICUpperEarningsLimit) - rules.NICPrimaryThreshold;
+            decimal nicableAtUpper = Math.Max(0, salary - rules.NICUpperEarningsLimit);
+            return Math.Round((nicableAtMain * rules.NICMainRate) + (nicableAtUpper * rules.NICUpperRate), 2);
         }
     }
 }

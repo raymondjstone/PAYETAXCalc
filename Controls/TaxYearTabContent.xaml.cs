@@ -472,6 +472,16 @@ namespace PAYETAXCalc.Controls
             ResNIPaid.Text = $"£{r.TotalNIPaid:N2}";
             ResExpectedNI.Text = $"£{r.ExpectedNI:N2}";
 
+            if (!string.IsNullOrEmpty(r.NIEstimationInfo))
+            {
+                ResNIEstimationInfo.Text = r.NIEstimationInfo;
+                ResNIEstimationInfo.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                ResNIEstimationInfo.Visibility = Visibility.Collapsed;
+            }
+
             // Student Loan
             if (r.StudentLoanRepayment > 0 || !string.IsNullOrEmpty(r.StudentLoanInfo))
             {
