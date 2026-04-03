@@ -230,7 +230,7 @@ public class ExportServiceTests : IDisposable
         // OpenXml can re-read it
         using var doc = DocumentFormat.OpenXml.Packaging.WordprocessingDocument.Open(path, false);
         Assert.NotNull(doc.MainDocumentPart);
-        Assert.NotNull(doc.MainDocumentPart!.Document.Body);
+        Assert.NotNull(doc.MainDocumentPart!.Document!.Body);
     }
 
     [Fact]
@@ -242,7 +242,7 @@ public class ExportServiceTests : IDisposable
         ExportService.ExportToWord(path, data, rules, result);
 
         using var doc = DocumentFormat.OpenXml.Packaging.WordprocessingDocument.Open(path, false);
-        string allText = doc.MainDocumentPart!.Document.Body!.InnerText;
+        string allText = doc.MainDocumentPart!.Document!.Body!.InnerText;
         Assert.Contains("2024/25", allText);
     }
 
@@ -255,7 +255,7 @@ public class ExportServiceTests : IDisposable
         ExportService.ExportToWord(path, data, rules, result);
 
         using var doc = DocumentFormat.OpenXml.Packaging.WordprocessingDocument.Open(path, false);
-        string allText = doc.MainDocumentPart!.Document.Body!.InnerText;
+        string allText = doc.MainDocumentPart!.Document!.Body!.InnerText;
         Assert.Contains("Test Corp", allText);
     }
 
@@ -268,7 +268,7 @@ public class ExportServiceTests : IDisposable
         ExportService.ExportToWord(path, data, rules, result);
 
         using var doc = DocumentFormat.OpenXml.Packaging.WordprocessingDocument.Open(path, false);
-        string allText = doc.MainDocumentPart!.Document.Body!.InnerText;
+        string allText = doc.MainDocumentPart!.Document!.Body!.InnerText;
         Assert.Contains("DISCLAIMER", allText);
     }
 
@@ -307,7 +307,7 @@ public class ExportServiceTests : IDisposable
         ExportService.ExportToWord(path, data, rules, result);
 
         using var doc = DocumentFormat.OpenXml.Packaging.WordprocessingDocument.Open(path, false);
-        string allText = doc.MainDocumentPart!.Document.Body!.InnerText;
+        string allText = doc.MainDocumentPart!.Document!.Body!.InnerText;
         Assert.Contains("Dividend Corp", allText);
     }
 
