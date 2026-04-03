@@ -400,4 +400,67 @@ public class TaxRulesProviderTests
         Assert.Contains("2024/25", summary);
         Assert.Contains("Personal Allowance", summary);
     }
+
+    // ═══════════ GetCompanyCarBIKPercentage ═══════════
+
+    [Theory]
+    [InlineData("2023/24", 2)]
+    [InlineData("2024/25", 2)]
+    [InlineData("2025/26", 3)]
+    [InlineData("2030/31", 3)]
+    public void Zero_Emission_Electric_BIK_Percentage_By_Year(string year, int expected)
+    {
+        int result = TaxRulesProvider.GetCompanyCarBIKPercentage(0, true, year);
+        Assert.Equal(expected, result);
+    }
+
+    [Theory]
+    [InlineData("2023/24", 8)]
+    [InlineData("2024/25", 8)]
+    [InlineData("2025/26", 9)]
+    public void Low_Emission_Electric_Hybrid_BIK_Percentage_By_Year(string year, int expected)
+    {
+        // 1-50 g/km plug-in hybrid
+        int result = TaxRulesProvider.GetCompanyCarBIKPercentage(30, true, year);
+        Assert.Equal(expected, result);
+    }
+
+    [Fact]
+    public void Standard_Car_CO2_50_Band_Is_15_Percent()
+    {
+        int result = TaxRulesProvider.GetCompanyCarBIKPercentage(50, false, "2024/25");
+        Assert.Equal(15, result);
+    }
+
+    [Fact]
+    public void Standard_Car_CO2_110_Band_Is_28_Percent()
+    {
+        // 110 > 109, <= 114
+        int result = TaxRulesProvider.GetCompanyCarBIKPercentage(110, false, "2024/25");
+        Assert.Equal(28, result);
+    }
+
+    [Fact]
+    public void Standard_Car_CO2_155_Capped_At_37_Percent()
+    {
+        // > 154 = 37, capped at 37
+        int result = TaxRulesProvider.GetCompanyCarBIKPercentage(155, false, "2024/25");
+        Assert.Equal(37, result);
+    }
+
+    [Fact]
+    public void Standard_Car_High_CO2_Capped_At_37_Percent()
+    {
+        // Very high CO2 should still cap at 37%
+        int result = TaxRulesProvider.GetCompanyCarBIKPercentage(300, false, "2024/25");
+        Assert.Equal(37, result);
+    }
+
+    [Fact]
+    public void Standard_Car_CO2_80_Band()
+    {
+        // 80 > 79, <= 84 → 22%
+        int result = TaxRulesProvider.GetCompanyCarBIKPercentage(80, false, "2024/25");
+        Assert.Equal(22, result);
+    }
 }

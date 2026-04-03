@@ -1,3 +1,5 @@
+using System;
+using System.IO;
 using PAYETAXCalc.Models;
 using PAYETAXCalc.Services;
 using Xunit;
@@ -245,5 +247,86 @@ public class DataServiceTests
         Assert.Single(loaded.TaxYears[0].SavingsIncomes);
         Assert.Equal(100, loaded.Window.X);
         Assert.Equal(200, loaded.Window.Y);
+    }
+
+    // ═══════════ ExportBackup ═══════════
+
+    [Fact]
+    public void ExportBackup_Creates_File_With_Content()
+    {
+        var appData = new AppData();
+        var ty = new TaxYearData { TaxYear = "2024/25" };
+        ty.Employments.Add(new Employment { EmployerName = "Backup Corp", GrossSalary = 60000 });
+        appData.TaxYears.Add(ty);
+
+        string path = Path.Combine(Path.GetTempPath(), $"PAYETAXCalc_backup_{Guid.NewGuid():N}.json");
+        try
+        {
+            DataService.ExportBackup(appData, path);
+
+            Assert.True(File.Exists(path));
+            Assert.True(new FileInfo(path).Length > 0);
+        }
+        finally
+        {
+            if (File.Exists(path)) File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public void ExportBackup_Produces_Valid_Json_That_Round_Trips()
+    {
+        var appData = new AppData();
+        appData.BuyMeCoffeeClicked = true;
+        var ty = new TaxYearData { TaxYear = "2023/24", IsScottishTaxpayer = true };
+        ty.Employments.Add(new Employment { EmployerName = "Round Trip Ltd", GrossSalary = 50000 });
+        ty.DividendIncomes.Add(new DividendIncome { CompanyName = "ACME plc", GrossDividend = 3000 });
+        appData.TaxYears.Add(ty);
+
+        string path = Path.Combine(Path.GetTempPath(), $"PAYETAXCalc_backup_{Guid.NewGuid():N}.json");
+        try
+        {
+            DataService.ExportBackup(appData, path);
+
+            string json = File.ReadAllText(path);
+            Assert.Contains("Round Trip Ltd", json);
+            Assert.Contains("2023/24", json);
+            Assert.Contains("ACME plc", json);
+        }
+        finally
+        {
+            if (File.Exists(path)) File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public void Save_And_Load_Preserves_BuyMeCoffeeClicked()
+    {
+        var appData = new AppData { BuyMeCoffeeClicked = true };
+        appData.TaxYears.Add(new TaxYearData { TaxYear = "2024/25" });
+        appData.TaxYears[0].Employments.Add(new Employment());
+
+        DataService.Save(appData);
+        var loaded = DataService.Load();
+
+        Assert.True(loaded.BuyMeCoffeeClicked);
+    }
+
+    [Fact]
+    public void Save_And_Load_Preserves_CapitalGains()
+    {
+        var appData = new AppData();
+        var ty = new TaxYearData { TaxYear = "2024/25" };
+        ty.Employments.Add(new Employment { GrossSalary = 30000 });
+        ty.CapitalGains.Add(new CapitalGain { Description = "Property sale", GainAmount = 50000, IsResidentialProperty = true });
+        appData.TaxYears.Add(ty);
+
+        DataService.Save(appData);
+        var loaded = DataService.Load();
+
+        Assert.Single(loaded.TaxYears[0].CapitalGains);
+        Assert.Equal("Property sale", loaded.TaxYears[0].CapitalGains[0].Description);
+        Assert.Equal(50000, loaded.TaxYears[0].CapitalGains[0].GainAmount);
+        Assert.True(loaded.TaxYears[0].CapitalGains[0].IsResidentialProperty);
     }
 }
