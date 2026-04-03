@@ -34,6 +34,13 @@ namespace PAYETAXCalc
             // Load data
             _appData = DataService.Load();
 
+            // Record first-use timestamp for the coffee prompt delay
+            if (_appData.FirstAppUse == null)
+            {
+                _appData.FirstAppUse = DateTimeOffset.UtcNow;
+                DataService.Save(_appData);
+            }
+
             // Restore window position before showing
             RestoreWindowPosition();
 
@@ -400,6 +407,54 @@ namespace PAYETAXCalc
             SyncAllTabs();
             SaveWindowPosition();
             DataService.Save(_appData);
+        }
+
+        private void BuyMeCoffeeButton_Click(object sender, RoutedEventArgs e)
+        {
+            _appData.BuyMeCoffeeClicked = true;
+            _appData.LastCoffeePrompt = DateTimeOffset.UtcNow;
+            DataService.Save(_appData);
+        }
+
+        public async void ShowCoffeePromptIfNeeded()
+        {
+            if (_appData.BuyMeCoffeeClicked)
+                return;
+
+            var now = DateTimeOffset.UtcNow;
+
+            // Don't show within the first 2 hours of first use
+            if (_appData.FirstAppUse.HasValue && (now - _appData.FirstAppUse.Value).TotalHours < 2)
+                return;
+
+            // Don't show more than once a fortnight
+            if (_appData.LastCoffeePrompt.HasValue && (now - _appData.LastCoffeePrompt.Value).TotalDays < 14)
+                return;
+
+            _appData.LastCoffeePrompt = now;
+            DataService.Save(_appData);
+
+            var dialog = new ContentDialog
+            {
+                Title = "Support PAYETAXCalc",
+                Content = "If you find this app useful, please consider buying me a coffee! " +
+                          "Clicking the button means you won't see this message again.\n\n" +
+                          "☕ https://buymeacoffee.com/raymondjstone",
+                PrimaryButtonText = "Open Buy Me a Coffee",
+                CloseButtonText = "Close",
+                DefaultButton = ContentDialogButton.Primary,
+                XamlRoot = Content.XamlRoot,
+            };
+
+            if (dialog.XamlRoot == null) return;
+
+            dialog.PrimaryButtonClick += (s, e) =>
+            {
+                BuyMeCoffeeButton_Click(null!, null!);
+                _ = Windows.System.Launcher.LaunchUriAsync(new Uri("https://buymeacoffee.com/raymondjstone"));
+            };
+
+            await dialog.ShowAsync();
         }
     }
 }

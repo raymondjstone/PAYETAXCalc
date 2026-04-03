@@ -1,5 +1,7 @@
 # UK PAYE Tax Calculator
 
+![UK PAYE Tax Calculator](Assets/AppSplash.png)
+
 A Windows desktop application for estimating UK income tax liability across multiple tax years.
 
 ## IMPORTANT DISCLAIMER
@@ -15,6 +17,12 @@ A Windows desktop application for estimating UK income tax liability across mult
 - The authors accept **no liability** for any errors, omissions, or consequences arising from use of this software
 
 Use entirely at your own risk.
+
+## Support
+
+If you find this app useful, please consider buying me a coffee!
+
+[![Buy Me a Coffee](https://img.shields.io/badge/☕_Buy_me_a_coffee-FFDD00?style=flat&logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/raymondjstone)
 
 ## Features
 

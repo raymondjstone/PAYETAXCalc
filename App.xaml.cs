@@ -29,10 +29,19 @@ namespace PAYETAXCalc
             e.Handled = true;
         }
 
-        protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
+        protected override async void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
         {
+            var splash = new SplashHostWindow();
+            splash.Activate();
+
+            await System.Threading.Tasks.Task.Delay(2000);
+
             m_window = new MainWindow();
             m_window.Activate();
+            splash.Close();
+
+            if (m_window is MainWindow mw)
+                mw.ShowCoffeePromptIfNeeded();
         }
     }
 }

@@ -22,10 +22,20 @@
         <!-- Custom title bar area - right padding leaves space for caption buttons -->
         <Grid x:Name="AppTitleBar" Height="48" Padding="16,0,0,0">
             <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
-                <FontIcon Glyph="&#xE912;" FontSize="18"/>
+                <Image Source="Assets/AppSplash.png" Width="24" Height="24" VerticalAlignment="Center"/>
                 <TextBlock Text="UK PAYE Tax Calculator" Style="{ThemeResource CaptionTextBlockStyle}"
                            FontWeight="SemiBold" VerticalAlignment="Center"/>
             </StackPanel>
+            <HyperlinkButton x:Name="BuyMeCoffeeButton"
+                             Content="☕ Buy me a coffee"
+                             NavigateUri="https://buymeacoffee.com/raymondjstone"
+                             HorizontalAlignment="Right"
+                             VerticalAlignment="Center"
+                             Margin="0,0,148,0"
+                             Padding="8,2"
+                             FontSize="12"
+                             ToolTipService.ToolTip="Any amount is appreciated and helps fund continued development!"
+                             Click="BuyMeCoffeeButton_Click" />
         </Grid>
 
         <!-- TabView for tax years -->
