@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace PAYETAXCalc.Models
@@ -14,5 +15,8 @@ namespace PAYETAXCalc.Models
     {
         public WindowSettings Window { get; set; } = new();
         public List<TaxYearData> TaxYears { get; set; } = new();
+        public bool BuyMeCoffeeClicked { get; set; } = false;
+        public DateTimeOffset? LastCoffeePrompt { get; set; }
+        public DateTimeOffset? FirstAppUse { get; set; }
     }
 }

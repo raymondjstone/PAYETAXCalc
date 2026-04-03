@@ -5,12 +5,15 @@
     <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
     <RootNamespace>PAYETAXCalc</RootNamespace>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\AppIcon.ico</ApplicationIcon>
     <Platforms>x86;x64;ARM64</Platforms>
     <RuntimeIdentifiers>win-x86;win-x64;win-arm64</RuntimeIdentifiers>
     <PublishProfile>win-$(Platform)-msi.pubxml</PublishProfile>
     <UseWinUI>true</UseWinUI>
     <WinUISDKReferences>false</WinUISDKReferences>
     <EnableMsixTooling Condition="'$(GenerateAppxPackageOnBuild)' != 'false'">true</EnableMsixTooling>
+    <!-- Never generate an MSIX package during Debug — the app runs unpackaged from the exe. -->
+    <GenerateAppxPackageOnBuild Condition="'$(Configuration)' == 'Debug'">false</GenerateAppxPackageOnBuild>
     <WindowsAppSdkBootstrapInitialize>false</WindowsAppSdkBootstrapInitialize>
     <WindowsAppSdkDeploymentManagerInitialize>false</WindowsAppSdkDeploymentManagerInitialize>
     <!-- Suppress the XAML-generated Main so our Program.cs can initialize the
@@ -20,7 +23,6 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <DefaultItemExcludes>$(DefaultItemExcludes);PAYETAXCalc.Tests\**;PAYETAXCalc.Core\**</DefaultItemExcludes>
   </PropertyGroup>
-
   <ItemGroup>
     <Content Include="Assets\SplashScreen.scale-200.png" />
     <Content Include="Assets\LockScreenLogo.scale-200.png" />
@@ -29,6 +31,8 @@
     <Content Include="Assets\Square44x44Logo.targetsize-24_altform-unplated.png" />
     <Content Include="Assets\StoreLogo.png" />
     <Content Include="Assets\Wide310x150Logo.scale-200.png" />
+    <Content Include="Assets\AppIcon.ico" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="Assets\AppSplash.png" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>
@@ -48,12 +52,34 @@
     <None Include="PAYETAXCalc.Installer.x64.wixproj" />
     <None Include="PAYETAXCalc.Installer.x86.wixproj" />
   </ItemGroup>
+
+  <!-- SplashScreen.xaml must be explicitly removed from the default Page glob and
+       re-added as a Page with MSBuild:Compile, otherwise the MSIX tooling treats it
+       as a manifest SplashScreen asset and the XAML code-gen step is skipped. -->
+  <ItemGroup>
+    <Page Remove="SplashScreen.xaml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="SplashScreen.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Page Include="SplashScreen.xaml" />
+  </ItemGroup>
   <ItemGroup>
     <PackageReference Include="ClosedXML" Version="0.105.0" />
     <PackageReference Include="DocumentFormat.OpenXml" Version="3.5.1" />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.7705" />
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.8.260317003" />
     <PackageReference Include="QuestPDF" Version="2026.2.4" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="SplashScreen.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </None>
   </ItemGroup>
 
   <!--
@@ -82,7 +108,6 @@
       <_MsiPlatform Condition="'$(RuntimeIdentifier)' == 'win-x64'">x64</_MsiPlatform>
       <_MsiPlatform Condition="'$(RuntimeIdentifier)' == 'win-x86'">x86</_MsiPlatform>
     </PropertyGroup>
-    <Exec Command="powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\BuildMSI.ps1&quot; -Platform $(_MsiPlatform) -SkipPublish"
-          WorkingDirectory="$(MSBuildProjectDirectory)" />
+    <Exec Command="powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\BuildMSI.ps1&quot; -Platform $(_MsiPlatform) -SkipPublish" WorkingDirectory="$(MSBuildProjectDirectory)" />
   </Target>
 </Project>

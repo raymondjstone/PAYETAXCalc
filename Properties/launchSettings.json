@@ -1,9 +1,6 @@
 {
   "profiles": {
-    "PAYETAXCalc (Package)": {
-      "commandName": "MsixPackage"
-    },
-    "PAYETAXCalc (Unpackaged)": {
+    "PAYETAXCalc": {
       "commandName": "Project"
     }
   }

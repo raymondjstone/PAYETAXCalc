@@ -6,6 +6,8 @@
            UpgradeCode="A1B2C3D4-E5F6-7890-ABCD-EF1234567890"
            Compressed="yes">
 
+    <Icon Id="PAYETAXCalcIcon" SourceFile="$(var.SourceDir)\Assets\AppIcon.ico" />
+
     <!-- Embed the cabinet inside the MSI so the installer is a single file -->
     <MediaTemplate EmbedCab="yes" />
 
@@ -35,7 +37,8 @@
                   Name="PAYETAXCalc"
                   Description="UK PAYE Tax Calculator"
                   Target="[INSTALLFOLDER]PAYETAXCalc.exe"
-                  WorkingDirectory="INSTALLFOLDER" />
+                  WorkingDirectory="INSTALLFOLDER"
+                  Icon="PAYETAXCalcIcon" />
         <RemoveFolder Id="CleanUpShortCuts" Directory="ApplicationProgramsFolder" On="uninstall" />
         <RegistryValue Root="HKCU"
                        Key="Software\PAYETAXCalc"
@@ -50,7 +53,8 @@
                   Name="PAYETAXCalc"
                   Description="UK PAYE Tax Calculator"
                   Target="[INSTALLFOLDER]PAYETAXCalc.exe"
-                  WorkingDirectory="INSTALLFOLDER" />
+                  WorkingDirectory="INSTALLFOLDER"
+                  Icon="PAYETAXCalcIcon" />
         <RegistryValue Root="HKCU"
                        Key="Software\PAYETAXCalc"
                        Name="desktop_shortcut"
