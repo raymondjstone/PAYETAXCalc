@@ -70,6 +70,12 @@ namespace PAYETAXCalc.Services
             }
         }
 
+        public static void ExportBackup(AppData data, string destinationPath)
+        {
+            string json = JsonSerializer.Serialize(data, _jsonOptions);
+            File.WriteAllText(destinationPath, json);
+        }
+
         public static TaxYearData CreateNewTaxYear(string taxYear, TaxYearData? previousYear)
         {
             var newYear = new TaxYearData { TaxYear = taxYear };

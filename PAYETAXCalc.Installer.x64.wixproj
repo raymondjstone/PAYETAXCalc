@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="WixToolset.Sdk/5.0.2">
+
+  <PropertyGroup>
+    <OutputName>PAYETAXCalc-Setup-x64</OutputName>
+    <OutputType>package</OutputType>
+    <InstallerPlatform>x64</InstallerPlatform>
+    <AppPublishDir>$(MSBuildProjectDirectory)\bin\publish\msi-x64\</AppPublishDir>
+    <OutputPath>$(MSBuildProjectDirectory)\bin\installer\</OutputPath>
+    <DefineConstants>SourceDir=$(AppPublishDir.TrimEnd('\'))</DefineConstants>
+    <SuppressSpecificWarnings>1076</SuppressSpecificWarnings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="WixToolset.Heat" Version="5.0.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="HarvestedFiles.wxs" />
+  </ItemGroup>
+
+  <!-- Read ProductVersion from Package.appxmanifest so Installer.wxs can use $(var.ProductVersion) -->
+  <Target Name="ReadAppVersion" BeforeTargets="BeforeBuild">
+    <XmlPeek XmlInputPath="$(MSBuildProjectDirectory)\Package.appxmanifest"
+             Query="/pkg:Package/pkg:Identity/@Version"
+             Namespaces="&lt;Namespace Prefix='pkg' Uri='http://schemas.microsoft.com/appx/manifest/foundation/windows10'/&gt;">
+      <Output TaskParameter="Result" PropertyName="AppVersion" />
+    </XmlPeek>
+    <PropertyGroup>
+      <DefineConstants>$(DefineConstants);ProductVersion=$(AppVersion)</DefineConstants>
+    </PropertyGroup>
+  </Target>
+
+  <!-- Build first to generate resources.pri -->
+  <Target Name="BuildApp" BeforeTargets="PublishApp" Condition="'$(SkipPublishApp)'!='true'">
+    <Message Text="Building PAYETAXCalc to generate resources.pri..." Importance="high" />
+    <Exec Command="dotnet build &quot;$(MSBuildProjectDirectory)\PAYETAXCalc.csproj&quot; -c Release -p:Platform=x64"
+          WorkingDirectory="$(MSBuildProjectDirectory)" />
+  </Target>
+
+  <!-- Publish the app before harvesting; skipped when invoked from the publish profile (files already there) -->
+  <Target Name="PublishApp" BeforeTargets="HarvestDirectory;BeforeBuild" Condition="'$(SkipPublishApp)'!='true'">
+    <Message Text="Publishing PAYETAXCalc for win-x64..." Importance="high" />
+    <Exec Command="dotnet publish &quot;$(MSBuildProjectDirectory)\PAYETAXCalc.csproj&quot; -c Release -r win-x64 --self-contained true -o &quot;$(AppPublishDir.TrimEnd('\'))&quot; -p:GenerateAppxPackageOnBuild=false -p:EnableMsixTooling=false -p:Platform=x64"
+          WorkingDirectory="$(MSBuildProjectDirectory)" />
+  </Target>
+
+  <!-- HeatWave: harvest all files from the publish directory -->
+  <ItemGroup>
+    <HarvestDirectory Include="$(AppPublishDir)">
+      <ComponentGroupName>HarvestedFiles</ComponentGroupName>
+      <DirectoryRefId>INSTALLFOLDER</DirectoryRefId>
+      <SuppressRootDirectory>true</SuppressRootDirectory>
+      <SuppressRegistry>true</SuppressRegistry>
+      <PreprocessorVariable>var.SourceDir</PreprocessorVariable>
+    </HarvestDirectory>
+  </ItemGroup>
+
+</Project>

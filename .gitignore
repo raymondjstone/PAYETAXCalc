@@ -361,3 +361,7 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+# MSI build artifacts
+bin/installer/
+bin/publish/msi*/
+bin/buildmsi-temp/

@@ -1,4 +1,4 @@
-<Solution>
+﻿<Solution>
   <Configurations>
     <Platform Name="ARM64" />
     <Platform Name="x64" />
@@ -12,4 +12,8 @@
   </Project>
   <Project Path="PAYETAXCalc.Core\PAYETAXCalc.Core.csproj" />
   <Project Path="PAYETAXCalc.Tests\PAYETAXCalc.Tests.csproj" />
+  <!-- Installer projects: NOT in any solution platform build -->
+  <!-- Right-click project -> Build to create MSI on demand -->
+  <Project Path="PAYETAXCalc.Installer.x64.wixproj" />
+  <Project Path="PAYETAXCalc.Installer.x86.wixproj" />
 </Solution>

@@ -80,7 +80,7 @@ The app handles two different types of pension contributions:
 Requires .NET 8 SDK with Windows App SDK workload.
 
 ```
-dotnet build -p:Platform=x64
+dotnet build PAYETAXCalc.csproj -p:Platform=x64
 ```
 
 ## Running Tests
@@ -89,12 +89,40 @@ dotnet build -p:Platform=x64
 dotnet test PAYETAXCalc.Tests\PAYETAXCalc.Tests.csproj
 ```
 
+## MSI Installer
+
+WiX Toolset v5 installer projects are included for x64 and x86 builds.
+
+**Build an MSI locally:**
+```
+dotnet build PAYETAXCalc.Installer.x64.wixproj -c Release
+```
+Output: `bin\installer\PAYETAXCalc-Setup-x64.msi`
+
+The installer project automatically publishes the app self-contained, harvests all output files using HeatWave, and packages them into a single MSI with Start Menu and Desktop shortcuts.
+
+## CI / CD
+
+GitHub Actions (`.github/workflows/ci.yml`) runs on every push and pull request to `master`:
+
+| Job | Trigger | What it does |
+|-----|---------|-------------|
+| **Build & Test** | All pushes / PRs | Restores, builds, and runs all xUnit tests; uploads TRX results as an artifact |
+| **Build & Release MSI** | Push to `master` only | Builds the x64 MSI and publishes a GitHub Release tagged with the version from `Package.appxmanifest` |
+
+**To release a new version:**
+1. Update `Version` in `Package.appxmanifest` (e.g. `1.2.0.0`)
+2. Push to `master`
+3. GitHub Actions builds the MSI and creates a release tagged `v1.2.0.0` automatically
+
 ## Tech Stack
 
 - WinUI 3 / Windows App SDK
 - .NET 8
 - Mica backdrop
+- WiX Toolset v5 (MSI installer)
 - xUnit for testing
+- GitHub Actions for CI/CD
 
 ## License
 

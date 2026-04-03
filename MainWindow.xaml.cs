@@ -324,6 +324,49 @@ namespace PAYETAXCalc
             SaveData();
         }
 
+        private async void Backup_Click(object sender, RoutedEventArgs e)
+        {
+            SyncAllTabs();
+            SaveData();
+
+            var picker = new Windows.Storage.Pickers.FileSavePicker();
+            // Required for unpackaged (MSI) apps — associate the picker with the window handle
+            WinRT.Interop.InitializeWithWindow.Initialize(
+                picker, WinRT.Interop.WindowNative.GetWindowHandle(this));
+
+            picker.SuggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.DocumentsLibrary;
+            picker.FileTypeChoices.Add("JSON Backup", new System.Collections.Generic.List<string> { ".json" });
+            picker.SuggestedFileName = $"PAYETAXCalc-backup-{DateTime.Now:yyyy-MM-dd}";
+
+            var file = await picker.PickSaveFileAsync();
+            if (file == null) return;
+
+            try
+            {
+                DataService.ExportBackup(_appData, file.Path);
+
+                var dialog = new ContentDialog
+                {
+                    Title = "Backup Saved",
+                    Content = $"All data exported to:\n{file.Path}",
+                    CloseButtonText = "OK",
+                    XamlRoot = Content.XamlRoot,
+                };
+                await dialog.ShowAsync();
+            }
+            catch (Exception ex)
+            {
+                var dialog = new ContentDialog
+                {
+                    Title = "Backup Failed",
+                    Content = $"Could not write backup file:\n{ex.Message}",
+                    CloseButtonText = "OK",
+                    XamlRoot = Content.XamlRoot,
+                };
+                await dialog.ShowAsync();
+            }
+        }
+
         private void SyncAllTabs()
         {
             foreach (var item in TaxYearTabs.TabItems)

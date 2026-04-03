@@ -1,0 +1,86 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  # ── Build & test ────────────────────────────────────────────────────────────
+  test:
+    name: Build & Test
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore
+        run: dotnet restore PAYETAXCalc.Tests\PAYETAXCalc.Tests.csproj -r win-x64
+
+      - name: Build
+        run: dotnet build PAYETAXCalc.Tests\PAYETAXCalc.Tests.csproj -c Release -r win-x64 --no-restore
+
+      - name: Test
+        run: dotnet test PAYETAXCalc.Tests\PAYETAXCalc.Tests.csproj -c Release -r win-x64 --no-build --logger "trx;LogFileName=test-results.trx"
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: PAYETAXCalc.Tests\TestResults\*.trx
+
+  # ── Build MSI & publish GitHub Release (master only) ──────────────────────
+  release:
+    name: Build & Release MSI (x64)
+    runs-on: windows-latest
+    needs: test
+    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Read version from manifest
+        id: version
+        shell: pwsh
+        run: |
+          [xml]$manifest = Get-Content Package.appxmanifest
+          $version = $manifest.Package.Identity.Version
+          Write-Host "Version: $version"
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "version=$version"
+
+      - name: Install WiX toolset
+        run: dotnet tool install --global wix
+
+      - name: Build MSI
+        shell: pwsh
+        run: .\BuildMSI.ps1 -Platform x64
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          name: PAYETAXCalc v${{ steps.version.outputs.version }}
+          body: |
+            ## UK PAYE Tax Calculator v${{ steps.version.outputs.version }}
+
+            ### Installation
+            Download and run **PAYETAXCalc-Setup-x64.msi** (Windows x64).
+
+            ### Disclaimer
+            This application is provided for estimation purposes only. Do not rely on it for filing tax returns or making financial decisions.
+          files: bin\installer\PAYETAXCalc-Setup-x64.msi
+          fail_on_unmatched_files: true

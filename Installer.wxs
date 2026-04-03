@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Package Name="PAYETAXCalc"
+           Manufacturer="PAYETAXCalc"
+           Version="$(var.ProductVersion)"
+           UpgradeCode="A1B2C3D4-E5F6-7890-ABCD-EF1234567890"
+           Compressed="yes">
+
+    <!-- Embed the cabinet inside the MSI so the installer is a single file -->
+    <MediaTemplate EmbedCab="yes" />
+
+    <!-- Automatically remove older versions on upgrade -->
+    <MajorUpgrade DowngradeErrorMessage="A newer version of PAYETAXCalc is already installed." />
+
+    <Feature Id="ProductFeature" Title="PAYETAXCalc" Level="1">
+      <ComponentGroupRef Id="HarvestedFiles" />
+      <ComponentGroupRef Id="ApplicationShortcuts" />
+    </Feature>
+
+    <StandardDirectory Id="ProgramFiles6432Folder">
+      <Directory Id="INSTALLFOLDER" Name="PAYETAXCalc" />
+    </StandardDirectory>
+
+    <StandardDirectory Id="ProgramMenuFolder">
+      <Directory Id="ApplicationProgramsFolder" Name="PAYETAXCalc" />
+    </StandardDirectory>
+
+    <StandardDirectory Id="DesktopFolder" />
+  </Package>
+
+  <Fragment>
+    <ComponentGroup Id="ApplicationShortcuts">
+      <Component Id="ApplicationShortcut" Directory="ApplicationProgramsFolder">
+        <Shortcut Id="ApplicationStartMenuShortcut"
+                  Name="PAYETAXCalc"
+                  Description="UK PAYE Tax Calculator"
+                  Target="[INSTALLFOLDER]PAYETAXCalc.exe"
+                  WorkingDirectory="INSTALLFOLDER" />
+        <RemoveFolder Id="CleanUpShortCuts" Directory="ApplicationProgramsFolder" On="uninstall" />
+        <RegistryValue Root="HKCU"
+                       Key="Software\PAYETAXCalc"
+                       Name="installed"
+                       Type="integer"
+                       Value="1"
+                       KeyPath="yes" />
+      </Component>
+
+      <Component Id="DesktopShortcut" Directory="DesktopFolder">
+        <Shortcut Id="ApplicationDesktopShortcut"
+                  Name="PAYETAXCalc"
+                  Description="UK PAYE Tax Calculator"
+                  Target="[INSTALLFOLDER]PAYETAXCalc.exe"
+                  WorkingDirectory="INSTALLFOLDER" />
+        <RegistryValue Root="HKCU"
+                       Key="Software\PAYETAXCalc"
+                       Name="desktop_shortcut"
+                       Type="integer"
+                       Value="1"
+                       KeyPath="yes" />
+      </Component>
+    </ComponentGroup>
+  </Fragment>
+
+</Wix>

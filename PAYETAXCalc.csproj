@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
@@ -10,7 +10,12 @@
     <PublishProfile>win-$(Platform).pubxml</PublishProfile>
     <UseWinUI>true</UseWinUI>
     <WinUISDKReferences>false</WinUISDKReferences>
-    <EnableMsixTooling>true</EnableMsixTooling>
+    <EnableMsixTooling Condition="'$(GenerateAppxPackageOnBuild)' != 'false'">true</EnableMsixTooling>
+    <WindowsAppSdkBootstrapInitialize>false</WindowsAppSdkBootstrapInitialize>
+    <WindowsAppSdkDeploymentManagerInitialize>false</WindowsAppSdkDeploymentManagerInitialize>
+    <!-- Suppress the XAML-generated Main so our Program.cs can initialize the
+         Windows App Runtime before Application.Start() when running unpackaged. -->
+    <DefineConstants>$(DefineConstants);DISABLE_XAML_GENERATED_MAIN</DefineConstants>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <DefaultItemExcludes>$(DefaultItemExcludes);PAYETAXCalc.Tests\**;PAYETAXCalc.Core\**</DefaultItemExcludes>
@@ -39,6 +44,11 @@
     <ProjectCapability Include="Msix" />
   </ItemGroup>
   <ItemGroup>
+    <None Include=".github\workflows\ci.yml" />
+    <None Include="PAYETAXCalc.Installer.x64.wixproj" />
+    <None Include="PAYETAXCalc.Installer.x86.wixproj" />
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="ClosedXML" Version="0.105.0" />
     <PackageReference Include="DocumentFormat.OpenXml" Version="3.5.1" />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.7705" />
@@ -59,7 +69,20 @@
   <PropertyGroup>
     <PublishReadyToRun Condition="'$(Configuration)' == 'Debug'">False</PublishReadyToRun>
     <PublishReadyToRun Condition="'$(Configuration)' != 'Debug'">True</PublishReadyToRun>
-    <PublishTrimmed Condition="'$(Configuration)' == 'Debug'">False</PublishTrimmed>
-    <PublishTrimmed Condition="'$(Configuration)' != 'Debug'">True</PublishTrimmed>
+    <PublishTrimmed>False</PublishTrimmed>
   </PropertyGroup>
+
+  <!--
+    After publishing with an MSI publish profile (which sets GenerateAppxPackageOnBuild=false),
+    invoke BuildMSI.ps1 to copy the .pri resource file and build the WiX MSI.
+    Defined here (not in .pubxml) because VS Publish UI reliably evaluates .csproj targets.
+  -->
+  <Target Name="BuildMSIPackage" AfterTargets="Publish" Condition="'$(GenerateAppxPackageOnBuild)' == 'false'">
+    <PropertyGroup>
+      <_MsiPlatform Condition="'$(RuntimeIdentifier)' == 'win-x64'">x64</_MsiPlatform>
+      <_MsiPlatform Condition="'$(RuntimeIdentifier)' == 'win-x86'">x86</_MsiPlatform>
+    </PropertyGroup>
+    <Exec Command="powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\BuildMSI.ps1&quot; -Platform $(_MsiPlatform) -SkipPublish"
+          WorkingDirectory="$(MSBuildProjectDirectory)" />
+  </Target>
 </Project>
