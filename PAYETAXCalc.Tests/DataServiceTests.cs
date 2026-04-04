@@ -416,6 +416,30 @@ public class DataServiceTests
     }
 
     [Fact]
+    public void Save_And_Load_Preserves_CoffeePromptTimestamps()
+    {
+        var now = DateTimeOffset.UtcNow;
+        var appData = new AppData
+        {
+            BuyMeCoffeeClicked = false,
+            LastCoffeePrompt = now,
+            FirstAppUse = now.AddDays(-7),
+        };
+        appData.TaxYears.Add(new TaxYearData { TaxYear = "2024/25" });
+        appData.TaxYears[0].Employments.Add(new Employment());
+
+        DataService.Save(appData);
+        var loaded = DataService.Load();
+
+        Assert.False(loaded.BuyMeCoffeeClicked);
+        Assert.NotNull(loaded.LastCoffeePrompt);
+        Assert.NotNull(loaded.FirstAppUse);
+        // Round-trip preserves to at least second precision
+        Assert.Equal(now.Date, loaded.LastCoffeePrompt!.Value.Date);
+        Assert.Equal(now.AddDays(-7).Date, loaded.FirstAppUse!.Value.Date);
+    }
+
+    [Fact]
     public void ImportBackup_Preserves_Welsh_Taxpayer_Flag()
     {
         var appData = new AppData();

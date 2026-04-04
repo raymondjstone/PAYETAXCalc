@@ -498,12 +498,15 @@ namespace PAYETAXCalc
             DataService.Save(_appData);
         }
 
-        private void BuyMeCoffeeButton_Click(object sender, RoutedEventArgs e)
+        private void MarkCoffeeSupported()
         {
             _appData.BuyMeCoffeeClicked = true;
             _appData.LastCoffeePrompt = DateTimeOffset.UtcNow;
             DataService.Save(_appData);
         }
+
+        private void BuyMeCoffeeButton_Click(object sender, RoutedEventArgs e) =>
+            MarkCoffeeSupported();
 
         public async void ShowCoffeePromptIfNeeded()
         {
@@ -520,9 +523,6 @@ namespace PAYETAXCalc
             if (_appData.LastCoffeePrompt.HasValue && (now - _appData.LastCoffeePrompt.Value).TotalDays < 14)
                 return;
 
-            _appData.LastCoffeePrompt = now;
-            DataService.Save(_appData);
-
             var dialog = new ContentDialog
             {
                 Title = "Support PAYETAXCalc",
@@ -537,9 +537,13 @@ namespace PAYETAXCalc
 
             if (dialog.XamlRoot == null) return;
 
+            // Persist suppression only after confirming the dialog can be shown
+            _appData.LastCoffeePrompt = now;
+            DataService.Save(_appData);
+
             dialog.PrimaryButtonClick += (s, e) =>
             {
-                BuyMeCoffeeButton_Click(null!, null!);
+                MarkCoffeeSupported();
                 _ = Windows.System.Launcher.LaunchUriAsync(new Uri("https://buymeacoffee.com/raymondjstone"));
             };
 

@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using Xunit;
 using PAYETAXCalc.Models;
@@ -515,6 +516,20 @@ namespace PAYETAXCalc.Tests
             var rules = Rules2024();
             var results = PayrollCalculatorService.Calculate(welsh, rules);
             Assert.Equal(12, results.Count);
+        }
+
+        [Fact]
+        public void InvalidFrequency_ThrowsArgumentOutOfRange()
+        {
+            var input = new PayrollInput
+            {
+                TaxYear = "2024/25",
+                Frequency = (PayFrequency)999,
+                AnnualGross = 30000m,
+                TaxCode = "1257L",
+            };
+            Assert.Throws<ArgumentOutOfRangeException>(() =>
+                PayrollCalculatorService.Calculate(input, Rules2024()));
         }
 
         [Fact]
