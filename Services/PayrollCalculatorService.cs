@@ -17,7 +17,7 @@ namespace PAYETAXCalc.Services
             {
                 PayFrequency.Monthly => 12,
                 PayFrequency.Weekly => 52,
-                _ => throw new ArgumentOutOfRangeException(nameof(input), $"Unsupported pay frequency: {input.Frequency}"),
+                _ => throw new ArgumentOutOfRangeException(nameof(input.Frequency), input.Frequency, $"Unsupported pay frequency: {input.Frequency}"),
             };
             decimal periodGross = input.AnnualGross / periodsPerYear;
 

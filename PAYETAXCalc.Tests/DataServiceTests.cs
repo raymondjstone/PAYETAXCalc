@@ -435,8 +435,10 @@ public class DataServiceTests
         Assert.NotNull(loaded.LastCoffeePrompt);
         Assert.NotNull(loaded.FirstAppUse);
         // Round-trip preserves to at least second precision
-        Assert.Equal(now.Date, loaded.LastCoffeePrompt!.Value.Date);
-        Assert.Equal(now.AddDays(-7).Date, loaded.FirstAppUse!.Value.Date);
+        Assert.True(Math.Abs((now - loaded.LastCoffeePrompt!.Value).TotalSeconds) < 1,
+            "LastCoffeePrompt should round-trip within 1 second");
+        Assert.True(Math.Abs((now.AddDays(-7) - loaded.FirstAppUse!.Value).TotalSeconds) < 1,
+            "FirstAppUse should round-trip within 1 second");
     }
 
     [Fact]
