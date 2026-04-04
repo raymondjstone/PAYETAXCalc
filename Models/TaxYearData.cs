@@ -7,6 +7,7 @@ namespace PAYETAXCalc.Models
     {
         private string _taxYear = "";
         private bool _isScottishTaxpayer;
+        private bool _isWelshTaxpayer;
         private bool _claimMarriageAllowance;
         private bool _isMarriageAllowanceReceiver;
         private bool _claimBlindPersonsAllowance;
@@ -57,6 +58,12 @@ namespace PAYETAXCalc.Models
         {
             get => _isScottishTaxpayer;
             set => SetProperty(ref _isScottishTaxpayer, value);
+        }
+
+        public bool IsWelshTaxpayer
+        {
+            get => _isWelshTaxpayer;
+            set => SetProperty(ref _isWelshTaxpayer, value);
         }
 
         public ObservableCollection<Employment> Employments { get; set; } = new();

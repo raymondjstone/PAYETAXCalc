@@ -1,0 +1,349 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl
+    x:Class="PAYETAXCalc.Controls.PayrollEstimatorPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:PAYETAXCalc.Controls"
+    xmlns:converters="using:PAYETAXCalc.Converters"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <UserControl.Resources>
+        <Style x:Key="ColHeader" TargetType="TextBlock">
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="HorizontalAlignment" Value="Right"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Padding" Value="4,0"/>
+        </Style>
+        <Style x:Key="ColHeaderLeft" TargetType="TextBlock">
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="HorizontalAlignment" Value="Left"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Padding" Value="4,0"/>
+        </Style>
+        <Style x:Key="ColCell" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="HorizontalAlignment" Value="Right"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Padding" Value="4,0"/>
+        </Style>
+        <Style x:Key="ColCellLeft" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="HorizontalAlignment" Value="Left"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Padding" Value="4,0"/>
+        </Style>
+        <Style x:Key="ColCellBold" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="HorizontalAlignment" Value="Right"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Padding" Value="4,0"/>
+        </Style>
+    </UserControl.Resources>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="24,16,24,24">
+        <StackPanel Spacing="16" MaxWidth="1060">
+
+            <TextBlock Text="Payroll Estimator" Style="{ThemeResource SubtitleTextBlockStyle}"/>
+            <TextBlock Style="{ThemeResource CaptionTextBlockStyle}"
+                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                       Text="Estimate PAYE salary, tax, NI and pension for every pay period in a tax year. Pension is treated as salary sacrifice (reduces taxable and NI-able pay)."/>
+
+            <!-- ═══ INPUTS CARD ═══ -->
+            <Border Padding="16" CornerRadius="8"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1">
+                <StackPanel Spacing="14">
+
+                    <!-- Row 1: Tax Year · Frequency · Gross · Tax Code -->
+                    <Grid ColumnSpacing="12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="150"/>
+                            <ColumnDefinition Width="175"/>
+                            <ColumnDefinition Width="175"/>
+                            <ColumnDefinition Width="130"/>
+                        </Grid.ColumnDefinitions>
+
+                        <ComboBox x:Name="TaxYearCombo" Header="Tax Year"
+                                  HorizontalAlignment="Stretch" Grid.Column="0"/>
+
+                        <StackPanel Grid.Column="1" Spacing="6">
+                            <TextBlock Text="Pay Frequency"
+                                       Style="{ThemeResource BodyTextBlockStyle}"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                            <StackPanel Orientation="Horizontal" Spacing="16">
+                                <RadioButton x:Name="MonthlyRadio" Content="Monthly"
+                                             IsChecked="True" GroupName="PayFrequency"/>
+                                <RadioButton x:Name="WeeklyRadio" Content="Weekly"
+                                             GroupName="PayFrequency"/>
+                            </StackPanel>
+                        </StackPanel>
+
+                        <NumberBox x:Name="GrossSalaryBox" Header="Annual Gross (£)"
+                                   Grid.Column="2"
+                                   Minimum="0" Maximum="10000000"
+                                   SpinButtonPlacementMode="Hidden"
+                                   HorizontalAlignment="Stretch"
+                                   PlaceholderText="e.g. 35000"/>
+
+                        <TextBox x:Name="TaxCodeBox" Header="Tax Code"
+                                 Grid.Column="3"
+                                 Text="1257L"
+                                 HorizontalAlignment="Stretch"
+                                 PlaceholderText="e.g. 1257L"/>
+                    </Grid>
+
+                    <!-- Row 2: Scottish · Employee Pension · Employer Pension · Calculate -->
+                    <Grid ColumnSpacing="12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="150"/>
+                            <ColumnDefinition Width="175"/>
+                            <ColumnDefinition Width="175"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0" Spacing="6">
+                            <TextBlock Text="Taxpayer Type"
+                                       Style="{ThemeResource BodyTextBlockStyle}"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                            <CheckBox x:Name="ScottishCheck" Content="Scottish Taxpayer" Margin="0,4,0,0"
+                                      Checked="ScottishCheck_Checked"/>
+                            <CheckBox x:Name="WelshCheck" Content="Welsh Taxpayer"
+                                      Checked="WelshCheck_Checked"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="1" Spacing="6">
+                            <TextBlock Text="Employee Pension"
+                                       Style="{ThemeResource BodyTextBlockStyle}"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                            <Grid ColumnSpacing="6">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="72"/>
+                                </Grid.ColumnDefinitions>
+                                <ComboBox x:Name="EmpPensionTypeCombo" Grid.Column="0"
+                                          HorizontalAlignment="Stretch">
+                                    <ComboBoxItem Content="% of Gross" IsSelected="True"/>
+                                    <ComboBoxItem Content="Fixed £/period"/>
+                                </ComboBox>
+                                <NumberBox x:Name="EmpPensionValueBox" Grid.Column="1"
+                                           Minimum="0" Maximum="100000"
+                                           SpinButtonPlacementMode="Hidden"
+                                           PlaceholderText="0"/>
+                            </Grid>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="2" Spacing="6">
+                            <TextBlock Text="Employer Pension"
+                                       Style="{ThemeResource BodyTextBlockStyle}"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                            <Grid ColumnSpacing="6">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="72"/>
+                                </Grid.ColumnDefinitions>
+                                <ComboBox x:Name="ErPensionTypeCombo" Grid.Column="0"
+                                          HorizontalAlignment="Stretch">
+                                    <ComboBoxItem Content="% of Gross" IsSelected="True"/>
+                                    <ComboBoxItem Content="Fixed £/period"/>
+                                </ComboBox>
+                                <NumberBox x:Name="ErPensionValueBox" Grid.Column="1"
+                                           Minimum="0" Maximum="100000"
+                                           SpinButtonPlacementMode="Hidden"
+                                           PlaceholderText="0"/>
+                            </Grid>
+                        </StackPanel>
+
+                        <Button x:Name="CalculateButton"
+                                Grid.Column="3"
+                                Content="Calculate Payroll"
+                                Style="{ThemeResource AccentButtonStyle}"
+                                HorizontalAlignment="Stretch"
+                                VerticalAlignment="Bottom"
+                                Height="40"
+                                Click="CalculateButton_Click"/>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- ═══ RESULTS ═══ -->
+            <Border x:Name="ResultsBorder" Visibility="Collapsed" CornerRadius="8"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1">
+                <StackPanel>
+
+                    <!-- Summary bar -->
+                    <Border Padding="16,12" CornerRadius="8,8,0,0"
+                            Background="{ThemeResource SubtleFillColorSecondaryBrush}">
+                        <Grid>
+                            <TextBlock x:Name="ResultsTitleText"
+                                       Style="{ThemeResource BodyStrongTextBlockStyle}"
+                                       VerticalAlignment="Center"/>
+                            <ScrollViewer HorizontalScrollBarVisibility="Auto"
+                                          VerticalScrollBarVisibility="Disabled"
+                                          HorizontalAlignment="Right">
+                                <StackPanel Orientation="Horizontal" Spacing="20">
+                                    <StackPanel Spacing="2">
+                                        <TextBlock Text="Annual Gross"
+                                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                        <TextBlock x:Name="SummaryGrossText"
+                                                   Style="{ThemeResource BodyStrongTextBlockStyle}"/>
+                                    </StackPanel>
+                                    <StackPanel Spacing="2">
+                                        <TextBlock Text="Total Income Tax"
+                                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                        <TextBlock x:Name="SummaryTaxText"
+                                                   Style="{ThemeResource BodyStrongTextBlockStyle}"/>
+                                    </StackPanel>
+                                    <StackPanel Spacing="2">
+                                        <TextBlock Text="Total Emp NI"
+                                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                        <TextBlock x:Name="SummaryEmpNIText"
+                                                   Style="{ThemeResource BodyStrongTextBlockStyle}"/>
+                                    </StackPanel>
+                                    <StackPanel Spacing="2">
+                                        <TextBlock Text="Total Emp Pension"
+                                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                        <TextBlock x:Name="SummaryEmpPensionText"
+                                                   Style="{ThemeResource BodyStrongTextBlockStyle}"/>
+                                    </StackPanel>
+                                    <StackPanel Spacing="2">
+                                        <TextBlock Text="Annual Net Pay"
+                                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                        <TextBlock x:Name="SummaryNetText"
+                                                   Style="{ThemeResource BodyStrongTextBlockStyle}"
+                                                   Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"/>
+                                    </StackPanel>
+                                    <StackPanel Spacing="2">
+                                        <TextBlock Text="Total Er NI"
+                                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                        <TextBlock x:Name="SummaryErNIText"
+                                                   Style="{ThemeResource BodyStrongTextBlockStyle}"/>
+                                    </StackPanel>
+                                    <StackPanel Spacing="2">
+                                        <TextBlock Text="Total Er Pension"
+                                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                        <TextBlock x:Name="SummaryErPensionText"
+                                                   Style="{ThemeResource BodyStrongTextBlockStyle}"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </ScrollViewer>
+                        </Grid>
+                    </Border>
+
+                    <!-- Period table -->
+                    <Border Padding="12,8,12,12">
+                        <StackPanel>
+
+                            <!-- Column headers -->
+                            <Grid MinHeight="28" Margin="0,0,0,2">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="135"/>
+                                    <ColumnDefinition Width="100"/>
+                                    <ColumnDefinition Width="100"/>
+                                    <ColumnDefinition Width="100"/>
+                                    <ColumnDefinition Width="110"/>
+                                    <ColumnDefinition Width="100"/>
+                                    <ColumnDefinition Width="100"/>
+                                    <ColumnDefinition Width="110"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Period" Style="{StaticResource ColHeaderLeft}"/>
+                                <TextBlock Grid.Column="1" Text="Gross Pay" Style="{StaticResource ColHeader}"/>
+                                <TextBlock Grid.Column="2" Text="Income Tax" Style="{StaticResource ColHeader}"/>
+                                <TextBlock Grid.Column="3" Text="Employee NI" Style="{StaticResource ColHeader}"/>
+                                <TextBlock Grid.Column="4" Text="Emp Pension" Style="{StaticResource ColHeader}"/>
+                                <TextBlock Grid.Column="5" Text="Net Pay" Style="{StaticResource ColHeader}"/>
+                                <TextBlock Grid.Column="6" Text="Employer NI" Style="{StaticResource ColHeader}"/>
+                                <TextBlock Grid.Column="7" Text="Er Pension" Style="{StaticResource ColHeader}"/>
+                            </Grid>
+                            <Rectangle Height="1"
+                                       Fill="{ThemeResource DividerStrokeColorDefaultBrush}"
+                                       Margin="0,0,0,4"/>
+
+                            <!-- Period rows -->
+                            <ItemsControl x:Name="PeriodsItemsControl">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid MinHeight="28" Padding="0,2">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="135"/>
+                                                <ColumnDefinition Width="100"/>
+                                                <ColumnDefinition Width="100"/>
+                                                <ColumnDefinition Width="100"/>
+                                                <ColumnDefinition Width="110"/>
+                                                <ColumnDefinition Width="100"/>
+                                                <ColumnDefinition Width="100"/>
+                                                <ColumnDefinition Width="110"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="{Binding PeriodLabel}"
+                                                       Style="{StaticResource ColCellLeft}"/>
+                                            <TextBlock Grid.Column="1" Text="{Binding GrossText}"
+                                                       Style="{StaticResource ColCell}"/>
+                                            <TextBlock Grid.Column="2" Text="{Binding TaxText}"
+                                                       Style="{StaticResource ColCell}"/>
+                                            <TextBlock Grid.Column="3" Text="{Binding EmpNIText}"
+                                                       Style="{StaticResource ColCell}"/>
+                                            <TextBlock Grid.Column="4" Text="{Binding EmpPensionText}"
+                                                       Style="{StaticResource ColCell}"/>
+                                            <TextBlock Grid.Column="5" Text="{Binding NetPayText}"
+                                                       Style="{StaticResource ColCellBold}"/>
+                                            <TextBlock Grid.Column="6" Text="{Binding ErNIText}"
+                                                       Style="{StaticResource ColCell}"/>
+                                            <TextBlock Grid.Column="7" Text="{Binding ErPensionText}"
+                                                       Style="{StaticResource ColCell}"/>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <!-- Totals row -->
+                            <Rectangle Height="1"
+                                       Fill="{ThemeResource DividerStrokeColorDefaultBrush}"
+                                       Margin="0,4,0,2"/>
+                            <Grid MinHeight="28" Padding="0,2">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="135"/>
+                                    <ColumnDefinition Width="100"/>
+                                    <ColumnDefinition Width="100"/>
+                                    <ColumnDefinition Width="100"/>
+                                    <ColumnDefinition Width="110"/>
+                                    <ColumnDefinition Width="100"/>
+                                    <ColumnDefinition Width="100"/>
+                                    <ColumnDefinition Width="110"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Annual Total"
+                                           Style="{StaticResource ColHeaderLeft}"/>
+                                <TextBlock x:Name="TotalsGrossText" Grid.Column="1"
+                                           Style="{StaticResource ColCellBold}"/>
+                                <TextBlock x:Name="TotalsTaxText" Grid.Column="2"
+                                           Style="{StaticResource ColCellBold}"/>
+                                <TextBlock x:Name="TotalsEmpNIText" Grid.Column="3"
+                                           Style="{StaticResource ColCellBold}"/>
+                                <TextBlock x:Name="TotalsEmpPensionText" Grid.Column="4"
+                                           Style="{StaticResource ColCellBold}"/>
+                                <TextBlock x:Name="TotalsNetText" Grid.Column="5"
+                                           Style="{StaticResource ColCellBold}"
+                                           Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"/>
+                                <TextBlock x:Name="TotalsErNIText" Grid.Column="6"
+                                           Style="{StaticResource ColCellBold}"/>
+                                <TextBlock x:Name="TotalsErPensionText" Grid.Column="7"
+                                           Style="{StaticResource ColCellBold}"/>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

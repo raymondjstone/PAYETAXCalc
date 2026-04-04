@@ -76,6 +76,30 @@ namespace PAYETAXCalc.Services
             File.WriteAllText(destinationPath, json);
         }
 
+        public static AppData? ImportBackup(string path)
+        {
+            try
+            {
+                string json = File.ReadAllText(path);
+                var data = JsonSerializer.Deserialize<AppData>(json, _jsonOptions);
+                if (data != null)
+                {
+                    foreach (var ty in data.TaxYears)
+                    {
+                        ty.Employments ??= new ObservableCollection<Employment>();
+                        ty.SavingsIncomes ??= new ObservableCollection<SavingsIncome>();
+                        ty.DividendIncomes ??= new ObservableCollection<DividendIncome>();
+                        ty.CapitalGains ??= new ObservableCollection<CapitalGain>();
+                    }
+                }
+                return data;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
         public static TaxYearData CreateNewTaxYear(string taxYear, TaxYearData? previousYear)
         {
             var newYear = new TaxYearData { TaxYear = taxYear };
@@ -135,6 +159,7 @@ namespace PAYETAXCalc.Services
                 newYear.IsMarriageAllowanceReceiver = previousYear.IsMarriageAllowanceReceiver;
                 newYear.ClaimBlindPersonsAllowance = previousYear.ClaimBlindPersonsAllowance;
                 newYear.IsScottishTaxpayer = previousYear.IsScottishTaxpayer;
+                newYear.IsWelshTaxpayer = previousYear.IsWelshTaxpayer;
             }
 
             // Ensure at least one employment entry
