@@ -514,7 +514,12 @@
                               IsChecked="{Binding ClaimBlindPersonsAllowance, Mode=TwoWay}"/>
 
                     <CheckBox x:Name="ScottishTaxpayerCheck" Content="Scottish Taxpayer (use Scottish income tax rates)"
-                              IsChecked="{Binding IsScottishTaxpayer, Mode=TwoWay}"/>
+                              IsChecked="{Binding IsScottishTaxpayer, Mode=TwoWay}"
+                              Checked="ScottishTaxpayerCheck_Checked"/>
+
+                    <CheckBox x:Name="WelshTaxpayerCheck" Content="Welsh Taxpayer (use Welsh income tax rates)"
+                              IsChecked="{Binding IsWelshTaxpayer, Mode=TwoWay}"
+                              Checked="WelshTaxpayerCheck_Checked"/>
 
                     <NumberBox x:Name="GiftAidBox" Header="Gift Aid Donations in this tax year (£)"
                                Value="{Binding GiftAidDonations, Mode=TwoWay}"

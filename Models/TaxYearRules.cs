@@ -38,11 +38,18 @@ namespace PAYETAXCalc.Models
         // Scottish income tax bands (different rates/thresholds)
         public List<TaxBand> ScottishBands { get; set; } = new();
 
+        // Welsh income tax bands (WRIT — matching rUK for 2023/24 onwards)
+        public List<TaxBand> WelshBands { get; set; } = new();
+
         // Employee Class 1 NIC (same for all UK)
         public decimal NICPrimaryThreshold { get; set; }
         public decimal NICUpperEarningsLimit { get; set; }
         public decimal NICMainRate { get; set; }
         public decimal NICUpperRate { get; set; }
+
+        // Employer Class 1 NIC
+        public decimal EmployerNICSecondaryThreshold { get; set; }
+        public decimal EmployerNICRate { get; set; }
 
         // Savings (same for all UK - always rUK rates)
         public decimal PersonalSavingsAllowanceBasic { get; set; }

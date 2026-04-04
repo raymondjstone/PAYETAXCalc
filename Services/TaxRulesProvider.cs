@@ -33,10 +33,18 @@ namespace PAYETAXCalc.Services
                     new TaxBand { Name = "Higher (42%)", Rate = 0.42m, UpperGrossThreshold = 125140m },
                     new TaxBand { Name = "Top (47%)", Rate = 0.47m, UpperGrossThreshold = 0 },
                 },
+                WelshBands = new()
+                {
+                    new TaxBand { Name = "Basic (20%)", Rate = 0.20m, UpperGrossThreshold = 50270m },
+                    new TaxBand { Name = "Higher (40%)", Rate = 0.40m, UpperGrossThreshold = 125140m },
+                    new TaxBand { Name = "Additional (45%)", Rate = 0.45m, UpperGrossThreshold = 0 },
+                },
                 NICPrimaryThreshold = 12570m,
                 NICUpperEarningsLimit = 50270m,
                 NICMainRate = 0.12m,
                 NICUpperRate = 0.02m,
+                EmployerNICSecondaryThreshold = 9100m,
+                EmployerNICRate = 0.138m,
                 PersonalSavingsAllowanceBasic = 1000m,
                 PersonalSavingsAllowanceHigher = 500m,
                 StartingRateForSavingsLimit = 5000m,
@@ -107,10 +115,18 @@ namespace PAYETAXCalc.Services
                     new TaxBand { Name = "Advanced (45%)", Rate = 0.45m, UpperGrossThreshold = 125140m },
                     new TaxBand { Name = "Top (48%)", Rate = 0.48m, UpperGrossThreshold = 0 },
                 },
+                WelshBands = new()
+                {
+                    new TaxBand { Name = "Basic (20%)", Rate = 0.20m, UpperGrossThreshold = 50270m },
+                    new TaxBand { Name = "Higher (40%)", Rate = 0.40m, UpperGrossThreshold = 125140m },
+                    new TaxBand { Name = "Additional (45%)", Rate = 0.45m, UpperGrossThreshold = 0 },
+                },
                 NICPrimaryThreshold = 12570m,
                 NICUpperEarningsLimit = 50270m,
                 NICMainRate = 0.08m,
                 NICUpperRate = 0.02m,
+                EmployerNICSecondaryThreshold = 9100m,
+                EmployerNICRate = 0.138m,
                 PersonalSavingsAllowanceBasic = 1000m,
                 PersonalSavingsAllowanceHigher = 500m,
                 StartingRateForSavingsLimit = 5000m,
@@ -181,10 +197,18 @@ namespace PAYETAXCalc.Services
                     new TaxBand { Name = "Advanced (45%)", Rate = 0.45m, UpperGrossThreshold = 125140m },
                     new TaxBand { Name = "Top (48%)", Rate = 0.48m, UpperGrossThreshold = 0 },
                 },
+                WelshBands = new()
+                {
+                    new TaxBand { Name = "Basic (20%)", Rate = 0.20m, UpperGrossThreshold = 50270m },
+                    new TaxBand { Name = "Higher (40%)", Rate = 0.40m, UpperGrossThreshold = 125140m },
+                    new TaxBand { Name = "Additional (45%)", Rate = 0.45m, UpperGrossThreshold = 0 },
+                },
                 NICPrimaryThreshold = 12570m,
                 NICUpperEarningsLimit = 50270m,
                 NICMainRate = 0.08m,
                 NICUpperRate = 0.02m,
+                EmployerNICSecondaryThreshold = 5000m,
+                EmployerNICRate = 0.15m,
                 PersonalSavingsAllowanceBasic = 1000m,
                 PersonalSavingsAllowanceHigher = 500m,
                 StartingRateForSavingsLimit = 5000m,
@@ -319,6 +343,7 @@ namespace PAYETAXCalc.Services
             return $"Tax Year {rules.TaxYear}{estimated}" +
                    $"Personal Allowance: £{rules.PersonalAllowance:N0} (tapers above £{rules.PersonalAllowanceTaperThreshold:N0})\n" +
                    $"rUK: {FormatBands(rules.RestOfUKBands)}\n" +
+                   $"Wales: {FormatBands(rules.WelshBands)}\n" +
                    $"Scotland: {FormatBands(rules.ScottishBands)}\n" +
                    $"Employee NIC: {rules.NICMainRate:P0} (£{rules.NICPrimaryThreshold:N0}-£{rules.NICUpperEarningsLimit:N0}), {rules.NICUpperRate:P0} above\n" +
                    $"WFH: £{rules.WorkFromHomeWeeklyRate}/week | Mileage: {rules.MileageRateFirst10000 * 100}p first 10k, {rules.MileageRateOver10000 * 100}p over\n" +
@@ -414,10 +439,18 @@ namespace PAYETAXCalc.Services
                     UpperGrossThreshold = b.UpperGrossThreshold,
                     ExtendsWithGiftAid = b.ExtendsWithGiftAid,
                 }).ToList(),
+                WelshBands = source.WelshBands.Select(b => new TaxBand
+                {
+                    Name = b.Name, Rate = b.Rate,
+                    UpperGrossThreshold = b.UpperGrossThreshold,
+                    ExtendsWithGiftAid = b.ExtendsWithGiftAid,
+                }).ToList(),
                 NICPrimaryThreshold = source.NICPrimaryThreshold,
                 NICUpperEarningsLimit = source.NICUpperEarningsLimit,
                 NICMainRate = source.NICMainRate,
                 NICUpperRate = source.NICUpperRate,
+                EmployerNICSecondaryThreshold = source.EmployerNICSecondaryThreshold,
+                EmployerNICRate = source.EmployerNICRate,
                 PersonalSavingsAllowanceBasic = source.PersonalSavingsAllowanceBasic,
                 PersonalSavingsAllowanceHigher = source.PersonalSavingsAllowanceHigher,
                 StartingRateForSavingsLimit = source.StartingRateForSavingsLimit,

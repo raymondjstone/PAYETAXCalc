@@ -61,6 +61,11 @@ If you find this app useful, please consider buying me a coffee!
 - **Savings income** — starting rate for savings, personal savings allowance
 - **NI verification** — compares paid vs expected employee Class 1 NIC
 
+### Payroll Estimator
+- **Period-by-period breakdown** — monthly or weekly PAYE, NI and pension estimates for a full tax year
+- **Pension modelling** — employee and employer pension as percentage of gross or fixed amount per period (salary sacrifice)
+- **Tax year data import** — when selecting a tax year that has a matching tab with salary data, offers to copy gross salary, tax code and taxpayer type into the estimator; auto-populates silently on first load if the default year has data
+
 ### User Experience
 - **Formatted numbers** — thousand separators and 2 decimal places for currency
 - **Carry forward** — new tax years inherit non-ended employments and savings with zero totals

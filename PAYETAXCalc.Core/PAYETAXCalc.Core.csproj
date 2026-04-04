@@ -28,6 +28,8 @@
     <Compile Include="..\Services\TaxRulesProvider.cs" Link="Services\TaxRulesProvider.cs" />
     <Compile Include="..\Services\DataService.cs" Link="Services\DataService.cs" />
     <Compile Include="..\Services\ExportService.cs" Link="Services\ExportService.cs" />
+    <Compile Include="..\Services\PayrollCalculatorService.cs" Link="Services\PayrollCalculatorService.cs" />
+    <Compile Include="..\Models\PayrollEstimate.cs" Link="Models\PayrollEstimate.cs" />
   </ItemGroup>
 
 </Project>

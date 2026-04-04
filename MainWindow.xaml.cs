@@ -15,6 +15,7 @@ namespace PAYETAXCalc
     {
         private AppData _appData = null!;
         private AppWindow _appWindow = null!;
+        private TabViewItem _payrollTab = null!;
         private bool _isLoading;
         private bool _windowReady;
 
@@ -130,10 +131,26 @@ namespace PAYETAXCalc
                 AddTab(taxYear);
             }
 
+            _payrollTab = CreatePayrollTab();
+            TaxYearTabs.TabItems.Add(_payrollTab);
+
             if (TaxYearTabs.TabItems.Count > 0)
                 TaxYearTabs.SelectedIndex = 0;
 
             _isLoading = false;
+        }
+
+        private TabViewItem CreatePayrollTab()
+        {
+            var page = new PayrollEstimatorPage();
+            page.SetTaxYearDataList(_appData.TaxYears);
+            return new TabViewItem
+            {
+                Header = "Payroll Estimator",
+                Content = page,
+                IsClosable = false,
+                Tag = "PAYROLL_ESTIMATOR",
+            };
         }
 
         private TabViewItem AddTab(TaxYearData taxYearData)
@@ -157,10 +174,10 @@ namespace PAYETAXCalc
 
         private void UpdateTabClosability()
         {
-            bool canClose = TaxYearTabs.TabItems.Count > 1;
+            bool canClose = _appData.TaxYears.Count > 1;
             foreach (var item in TaxYearTabs.TabItems)
             {
-                if (item is TabViewItem tab)
+                if (item is TabViewItem tab && tab.Tag is TaxYearData)
                     tab.IsClosable = canClose;
             }
         }
@@ -288,6 +305,9 @@ namespace PAYETAXCalc
             {
                 AddTab(ty);
             }
+            TaxYearTabs.TabItems.Add(_payrollTab);
+            if (_payrollTab.Content is PayrollEstimatorPage payrollPage)
+                payrollPage.SetTaxYearDataList(_appData.TaxYears);
 
             var newTabIndex = _appData.TaxYears.FindIndex(t => t.TaxYear == selectedYear);
             if (newTabIndex >= 0)
@@ -329,6 +349,75 @@ namespace PAYETAXCalc
         {
             SyncAllTabs();
             SaveData();
+        }
+
+        private async void Import_Click(object sender, RoutedEventArgs e)
+        {
+            var picker = new Windows.Storage.Pickers.FileOpenPicker();
+            WinRT.Interop.InitializeWithWindow.Initialize(
+                picker, WinRT.Interop.WindowNative.GetWindowHandle(this));
+
+            picker.SuggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.DocumentsLibrary;
+            picker.FileTypeFilter.Add(".json");
+
+            var file = await picker.PickSingleFileAsync();
+            if (file == null) return;
+
+            var confirmDialog = new ContentDialog
+            {
+                Title = "Import Backup",
+                Content = $"This will replace ALL current data with the contents of:\n{file.Path}\n\nThis cannot be undone. Continue?",
+                PrimaryButtonText = "Import",
+                CloseButtonText = "Cancel",
+                DefaultButton = ContentDialogButton.Close,
+                XamlRoot = Content.XamlRoot,
+            };
+
+            if (await confirmDialog.ShowAsync() != ContentDialogResult.Primary) return;
+
+            var imported = DataService.ImportBackup(file.Path);
+            if (imported == null)
+            {
+                var errorDialog = new ContentDialog
+                {
+                    Title = "Import Failed",
+                    Content = "The selected file could not be read as a valid backup.\nPlease choose a file exported by this application.",
+                    CloseButtonText = "OK",
+                    XamlRoot = Content.XamlRoot,
+                };
+                await errorDialog.ShowAsync();
+                return;
+            }
+
+            _appData = imported;
+            TaxYearTabs.TabItems.Clear();
+
+            if (_appData.TaxYears.Count == 0)
+            {
+                string currentYear = TaxRulesProvider.GetCurrentTaxYear();
+                var data = DataService.CreateNewTaxYear(currentYear, null);
+                _appData.TaxYears.Add(data);
+            }
+
+            foreach (var ty in _appData.TaxYears)
+                AddTab(ty);
+
+            _payrollTab = CreatePayrollTab();
+            TaxYearTabs.TabItems.Add(_payrollTab);
+
+            if (TaxYearTabs.TabItems.Count > 0)
+                TaxYearTabs.SelectedIndex = 0;
+
+            DataService.Save(_appData);
+
+            var successDialog = new ContentDialog
+            {
+                Title = "Import Successful",
+                Content = $"Data imported from:\n{file.Path}",
+                CloseButtonText = "OK",
+                XamlRoot = Content.XamlRoot,
+            };
+            await successDialog.ShowAsync();
         }
 
         private async void Backup_Click(object sender, RoutedEventArgs e)

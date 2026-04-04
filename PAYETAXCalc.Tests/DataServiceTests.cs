@@ -329,4 +329,121 @@ public class DataServiceTests
         Assert.Equal(50000, loaded.TaxYears[0].CapitalGains[0].GainAmount);
         Assert.True(loaded.TaxYears[0].CapitalGains[0].IsResidentialProperty);
     }
+
+    // ═══════════ ImportBackup ═══════════
+
+    [Fact]
+    public void ImportBackup_Returns_Null_For_Invalid_File()
+    {
+        string path = Path.Combine(Path.GetTempPath(), $"PAYETAXCalc_invalid_{Guid.NewGuid():N}.json");
+        try
+        {
+            File.WriteAllText(path, "this is not valid json {{{");
+            var result = DataService.ImportBackup(path);
+            Assert.Null(result);
+        }
+        finally
+        {
+            if (File.Exists(path)) File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public void ImportBackup_Returns_Null_For_Missing_File()
+    {
+        var result = DataService.ImportBackup(Path.Combine(Path.GetTempPath(), "no_such_file_xyz.json"));
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public void ImportBackup_Round_Trips_Tax_Data()
+    {
+        var appData = new AppData();
+        var ty = new TaxYearData
+        {
+            TaxYear = "2024/25",
+            IsScottishTaxpayer = true,
+            GiftAidDonations = 250,
+        };
+        ty.Employments.Add(new Employment { EmployerName = "Import Co", GrossSalary = 55000, TaxPaid = 12000 });
+        ty.SavingsIncomes.Add(new SavingsIncome { ProviderName = "Import Bank", InterestAmount = 800 });
+        appData.TaxYears.Add(ty);
+
+        string path = Path.Combine(Path.GetTempPath(), $"PAYETAXCalc_import_{Guid.NewGuid():N}.json");
+        try
+        {
+            DataService.ExportBackup(appData, path);
+            var imported = DataService.ImportBackup(path);
+
+            Assert.NotNull(imported);
+            Assert.Single(imported!.TaxYears);
+            Assert.Equal("2024/25", imported.TaxYears[0].TaxYear);
+            Assert.True(imported.TaxYears[0].IsScottishTaxpayer);
+            Assert.Equal(250, imported.TaxYears[0].GiftAidDonations);
+            Assert.Single(imported.TaxYears[0].Employments);
+            Assert.Equal("Import Co", imported.TaxYears[0].Employments[0].EmployerName);
+            Assert.Equal(55000, imported.TaxYears[0].Employments[0].GrossSalary);
+            Assert.Single(imported.TaxYears[0].SavingsIncomes);
+        }
+        finally
+        {
+            if (File.Exists(path)) File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public void ImportBackup_Initialises_Null_Collections()
+    {
+        // Simulate a minimal JSON without collections (as might come from an old backup)
+        string json = "{\"taxYears\":[{\"taxYear\":\"2024/25\"}]}";
+        string path = Path.Combine(Path.GetTempPath(), $"PAYETAXCalc_null_{Guid.NewGuid():N}.json");
+        try
+        {
+            File.WriteAllText(path, json);
+            var imported = DataService.ImportBackup(path);
+
+            Assert.NotNull(imported);
+            Assert.Single(imported!.TaxYears);
+            Assert.NotNull(imported.TaxYears[0].Employments);
+            Assert.NotNull(imported.TaxYears[0].SavingsIncomes);
+            Assert.NotNull(imported.TaxYears[0].DividendIncomes);
+            Assert.NotNull(imported.TaxYears[0].CapitalGains);
+        }
+        finally
+        {
+            if (File.Exists(path)) File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public void ImportBackup_Preserves_Welsh_Taxpayer_Flag()
+    {
+        var appData = new AppData();
+        appData.TaxYears.Add(new TaxYearData { TaxYear = "2025/26", IsWelshTaxpayer = true });
+        appData.TaxYears[0].Employments.Add(new Employment { GrossSalary = 30000 });
+
+        string path = Path.Combine(Path.GetTempPath(), $"PAYETAXCalc_welsh_{Guid.NewGuid():N}.json");
+        try
+        {
+            DataService.ExportBackup(appData, path);
+            var imported = DataService.ImportBackup(path);
+
+            Assert.NotNull(imported);
+            Assert.True(imported!.TaxYears[0].IsWelshTaxpayer);
+        }
+        finally
+        {
+            if (File.Exists(path)) File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public void CreateNewTaxYear_Carries_Forward_Welsh_Flag()
+    {
+        var prev = new TaxYearData { TaxYear = "2024/25", IsWelshTaxpayer = true };
+
+        var result = DataService.CreateNewTaxYear("2025/26", prev);
+
+        Assert.True(result.IsWelshTaxpayer);
+    }
 }

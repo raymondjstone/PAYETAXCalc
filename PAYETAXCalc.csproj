@@ -57,16 +57,21 @@
        re-added as a Page with MSBuild:Compile, otherwise the MSIX tooling treats it
        as a manifest SplashScreen asset and the XAML code-gen step is skipped. -->
   <ItemGroup>
+    <Page Remove="Controls\PayrollEstimatorPage.xaml" />
     <Page Remove="SplashScreen.xaml" />
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="Controls\PayrollEstimatorPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </None>
     <None Update="SplashScreen.xaml">
       <Generator>MSBuild:Compile</Generator>
     </None>
   </ItemGroup>
 
   <ItemGroup>
+    <Page Include="Controls\PayrollEstimatorPage.xaml" />
     <Page Include="SplashScreen.xaml" />
   </ItemGroup>
   <ItemGroup>

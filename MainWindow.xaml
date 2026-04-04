@@ -53,6 +53,13 @@
             </TabView.TabStripHeader>
             <TabView.TabStripFooter>
                 <StackPanel Orientation="Horizontal">
+                    <Button x:Name="ImportButton" Click="Import_Click" VerticalAlignment="Center" Margin="0,0,4,0"
+                            ToolTipService.ToolTip="Import data from a backup file (replaces current data)">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <FontIcon Glyph="&#xE8B5;" FontSize="14"/>
+                            <TextBlock Text="Import"/>
+                        </StackPanel>
+                    </Button>
                     <Button x:Name="BackupButton" Click="Backup_Click" VerticalAlignment="Center" Margin="0,0,4,0"
                             ToolTipService.ToolTip="Export a backup copy of all data to a file">
                         <StackPanel Orientation="Horizontal" Spacing="6">

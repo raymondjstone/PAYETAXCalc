@@ -463,4 +463,66 @@ public class TaxRulesProviderTests
         int result = TaxRulesProvider.GetCompanyCarBIKPercentage(80, false, "2024/25");
         Assert.Equal(22, result);
     }
+
+    // ═══════════ Welsh Bands ═══════════
+
+    [Theory]
+    [InlineData("2023/24")]
+    [InlineData("2024/25")]
+    [InlineData("2025/26")]
+    public void Welsh_Has_Three_Bands(string year)
+    {
+        var rules = TaxRulesProvider.GetRules(year)!;
+        Assert.Equal(3, rules.WelshBands.Count);
+    }
+
+    [Theory]
+    [InlineData("2023/24")]
+    [InlineData("2024/25")]
+    [InlineData("2025/26")]
+    public void Welsh_Basic_Rate_Is_20_Percent(string year)
+    {
+        var rules = TaxRulesProvider.GetRules(year)!;
+        Assert.Equal(0.20m, rules.WelshBands[0].Rate);
+    }
+
+    [Theory]
+    [InlineData("2023/24")]
+    [InlineData("2024/25")]
+    [InlineData("2025/26")]
+    public void Welsh_Top_Band_Has_No_Upper_Limit(string year)
+    {
+        var rules = TaxRulesProvider.GetRules(year)!;
+        Assert.Equal(0m, rules.WelshBands[^1].UpperGrossThreshold);
+    }
+
+    [Theory]
+    [InlineData("2023/24")]
+    [InlineData("2024/25")]
+    [InlineData("2025/26")]
+    public void Welsh_Bands_Match_RUK_Bands(string year)
+    {
+        var rules = TaxRulesProvider.GetRules(year)!;
+        Assert.Equal(rules.RestOfUKBands.Count, rules.WelshBands.Count);
+        for (int i = 0; i < rules.RestOfUKBands.Count; i++)
+        {
+            Assert.Equal(rules.RestOfUKBands[i].Rate, rules.WelshBands[i].Rate);
+            Assert.Equal(rules.RestOfUKBands[i].UpperGrossThreshold, rules.WelshBands[i].UpperGrossThreshold);
+        }
+    }
+
+    [Fact]
+    public void Estimated_Rules_Clone_Welsh_Bands()
+    {
+        var rules = TaxRulesProvider.GetOrEstimateRules("2030/31");
+        Assert.True(rules.WelshBands.Count > 0);
+    }
+
+    [Fact]
+    public void GetRulesSummary_Includes_Wales()
+    {
+        var rules = TaxRulesProvider.GetRules("2024/25")!;
+        var summary = TaxRulesProvider.GetRulesSummary(rules);
+        Assert.Contains("Wales", summary);
+    }
 }

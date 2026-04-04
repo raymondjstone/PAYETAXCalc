@@ -33,6 +33,7 @@ namespace PAYETAXCalc.Controls
             MarriageAllowanceCheck.IsChecked = data.ClaimMarriageAllowance;
             BlindPersonCheck.IsChecked = data.ClaimBlindPersonsAllowance;
             ScottishTaxpayerCheck.IsChecked = data.IsScottishTaxpayer;
+            WelshTaxpayerCheck.IsChecked = data.IsWelshTaxpayer;
             GiftAidBox.Value = data.GiftAidDonations;
             ReliefAtSourceBox.Value = data.ReliefAtSourcePensionContributions;
 
@@ -101,6 +102,7 @@ namespace PAYETAXCalc.Controls
             TaxYearData.IsMarriageAllowanceReceiver = MAReceiver.IsChecked == true;
             TaxYearData.ClaimBlindPersonsAllowance = BlindPersonCheck.IsChecked == true;
             TaxYearData.IsScottishTaxpayer = ScottishTaxpayerCheck.IsChecked == true;
+            TaxYearData.IsWelshTaxpayer = WelshTaxpayerCheck.IsChecked == true;
             TaxYearData.GiftAidDonations = double.IsNaN(GiftAidBox.Value) ? 0 : GiftAidBox.Value;
             TaxYearData.ReliefAtSourcePensionContributions = double.IsNaN(ReliefAtSourceBox.Value) ? 0 : ReliefAtSourceBox.Value;
 
@@ -139,6 +141,12 @@ namespace PAYETAXCalc.Controls
             TaxYearData.TaxCode = TaxCodeBox.Text ?? "";
             TaxYearData.PriorYearTaxOwed = double.IsNaN(PriorYearTaxBox.Value) ? 0 : PriorYearTaxBox.Value;
         }
+
+        private void ScottishTaxpayerCheck_Checked(object sender, RoutedEventArgs e) =>
+            WelshTaxpayerCheck.IsChecked = false;
+
+        private void WelshTaxpayerCheck_Checked(object sender, RoutedEventArgs e) =>
+            ScottishTaxpayerCheck.IsChecked = false;
 
         private void AddEmployment_Click(object sender, RoutedEventArgs e)
         {

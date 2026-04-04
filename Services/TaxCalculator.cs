@@ -140,7 +140,9 @@ namespace PAYETAXCalc.Services
             result.TaxableSavingsIncome = taxableSavings;
 
             // 10. Tax on non-savings income using appropriate bands
-            var bands = data.IsScottishTaxpayer ? rules.ScottishBands : rules.RestOfUKBands;
+            var bands = data.IsScottishTaxpayer ? rules.ScottishBands
+                      : data.IsWelshTaxpayer    ? rules.WelshBands
+                      : rules.RestOfUKBands;
             decimal nonSavingsTax = CalculateBandedTax(
                 taxableNonSavings, nonSavingsIncome, personalAllowance, giftAidGross,
                 bands, result);
