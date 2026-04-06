@@ -27,9 +27,7 @@
                   Return="asyncNoWait" />
 
     <InstallExecuteSequence>
-      <Custom Action="LaunchApplication" After="InstallFinalize">
-        NOT REMOVE~="ALL"
-      </Custom>
+      <Custom Action="LaunchApplication" After="InstallFinalize" Condition='NOT REMOVE~="ALL"' />
     </InstallExecuteSequence>
 
     <StandardDirectory Id="ProgramFiles6432Folder">
