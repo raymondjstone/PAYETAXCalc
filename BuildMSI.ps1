@@ -141,11 +141,15 @@ $outputName = "PAYETAXCalc-Setup-$Platform.msi"
 $productVersion = $manifest.Package.Identity.Version
 Write-Host "Product version: $productVersion" -ForegroundColor Cyan
 
+$utilCA = if ($Platform -eq "x86") { "Wix4UtilCA_X86" } else { "Wix4UtilCA_X64" }
+
 wix build "Installer.wxs" "bin\buildmsi-temp\HarvestedFiles.wxs" `
     -o "bin\installer\$outputName" `
     -arch $Platform.ToLower() `
     -d "ProductVersion=$productVersion" `
     -d "SourceDir=$PublishDir" `
+    -d "UtilCA=$utilCA" `
+    -ext WixToolset.Util.wixext `
     -pdbtype none
 
 if ($LASTEXITCODE -ne 0) {

@@ -11,7 +11,7 @@
   <Identity
     Name="c0880e77-baa1-46f6-9bdb-ffbdeb6b4581"
     Publisher="CN=passp"
-    Version="1.5.0.0" />
+    Version="1.6.0.0" />
 
   <mp:PhoneIdentity PhoneProductId="c0880e77-baa1-46f6-9bdb-ffbdeb6b4581" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
