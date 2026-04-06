@@ -30,6 +30,10 @@
                                FontSize="14"
                                Opacity="0.7"
                                HorizontalAlignment="Center"/>
+                    <TextBlock x:Name="VersionText"
+                               FontSize="12"
+                               Opacity="0.5"
+                               HorizontalAlignment="Center"/>
                 </StackPanel>
 
                 <!-- Loading indicator -->

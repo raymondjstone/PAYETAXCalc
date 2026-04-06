@@ -13,7 +13,10 @@
       "Bash(ls:*)",
       "Bash(gh pr:*)",
       "WebFetch(domain:github.com)",
-      "Bash(xxd:*)"
+      "Bash(xxd:*)",
+      "Bash(gh api:*)",
+      "WebFetch(domain:api.github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)"
     ]
   }
 }
