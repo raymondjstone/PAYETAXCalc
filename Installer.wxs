@@ -19,15 +19,15 @@
       <ComponentGroupRef Id="ApplicationShortcuts" />
     </Feature>
 
-    <!-- Launch the app after install — runs as the installing user, does not wait for exit -->
+    <!-- Launch app after install/upgrade (runs as the installing user, not elevated) -->
+    <SetProperty Id="WixShellExecTarget" Value="[INSTALLFOLDER]PAYETAXCalc.exe"
+                 Before="LaunchApplication" Sequence="execute" />
     <CustomAction Id="LaunchApplication"
-                  Directory="INSTALLFOLDER"
-                  ExeCommand="PAYETAXCalc.exe"
+                  DllEntry="WixShellExec"
                   Impersonate="yes"
-                  Return="asyncNoWait" />
-
+                  BinaryRef="$(var.UtilCA)" />
     <InstallExecuteSequence>
-      <Custom Action="LaunchApplication" After="InstallFinalize" Condition='NOT REMOVE~="ALL"' />
+      <Custom Action="LaunchApplication" After="InstallFinalize" Condition="NOT REMOVE" />
     </InstallExecuteSequence>
 
     <StandardDirectory Id="ProgramFiles6432Folder">
