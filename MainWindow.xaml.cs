@@ -55,8 +55,8 @@ namespace PAYETAXCalc
             // Mark window as ready after a short delay to avoid saving default position
             DispatcherQueue.TryEnqueue(() => { _windowReady = true; });
 
-            // Check for app updates (fire-and-forget so it doesn't block startup)
-            _ = CheckForUpdateAsync();
+            // Check for app updates once the window content has loaded
+            ((FrameworkElement)Content).Loaded += (s, e) => _ = CheckForUpdateAsync();
         }
 
         private void RestoreWindowPosition()
