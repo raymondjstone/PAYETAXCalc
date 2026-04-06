@@ -19,6 +19,19 @@
       <ComponentGroupRef Id="ApplicationShortcuts" />
     </Feature>
 
+    <!-- Launch the app after install — runs as the installing user, does not wait for exit -->
+    <CustomAction Id="LaunchApplication"
+                  Directory="INSTALLFOLDER"
+                  ExeCommand="PAYETAXCalc.exe"
+                  Impersonate="yes"
+                  Return="asyncNoWait" />
+
+    <InstallExecuteSequence>
+      <Custom Action="LaunchApplication" After="InstallFinalize">
+        NOT REMOVE~="ALL"
+      </Custom>
+    </InstallExecuteSequence>
+
     <StandardDirectory Id="ProgramFiles6432Folder">
       <Directory Id="INSTALLFOLDER" Name="PAYETAXCalc" />
     </StandardDirectory>
