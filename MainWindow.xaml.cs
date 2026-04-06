@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Windowing;
@@ -53,6 +54,9 @@ namespace PAYETAXCalc
 
             // Mark window as ready after a short delay to avoid saving default position
             DispatcherQueue.TryEnqueue(() => { _windowReady = true; });
+
+            // Check for app updates (fire-and-forget so it doesn't block startup)
+            _ = CheckForUpdateAsync();
         }
 
         private void RestoreWindowPosition()
@@ -498,11 +502,43 @@ namespace PAYETAXCalc
             DataService.Save(_appData);
         }
 
-        private void BuyMeCoffeeButton_Click(object sender, RoutedEventArgs e)
+        private void MarkCoffeeSupported()
         {
             _appData.BuyMeCoffeeClicked = true;
             _appData.LastCoffeePrompt = DateTimeOffset.UtcNow;
             DataService.Save(_appData);
+        }
+
+        private void BuyMeCoffeeButton_Click(object sender, RoutedEventArgs e) =>
+            MarkCoffeeSupported();
+
+        private async Task CheckForUpdateAsync()
+        {
+            var update = await UpdateCheckService.CheckForUpdateAsync();
+            if (update == null)
+                return;
+
+            var (newVersion, downloadUrl) = update.Value;
+            var current = UpdateCheckService.GetCurrentVersion();
+
+            var dialog = new ContentDialog
+            {
+                Title = "Update Available",
+                Content = $"A new version of PAYETAXCalc is available.\n\n" +
+                          $"Current version: {current}\n" +
+                          $"Latest version: {newVersion}\n\n" +
+                          $"Would you like to download it?",
+                PrimaryButtonText = "Download",
+                CloseButtonText = "Later",
+                DefaultButton = ContentDialogButton.Primary,
+                XamlRoot = Content.XamlRoot,
+            };
+            if (dialog.XamlRoot == null) return;
+            dialog.PrimaryButtonClick += (s, e) =>
+            {
+                _ = Windows.System.Launcher.LaunchUriAsync(new Uri(downloadUrl));
+            };
+            await dialog.ShowAsync();
         }
 
         public async void ShowCoffeePromptIfNeeded()
@@ -520,9 +556,6 @@ namespace PAYETAXCalc
             if (_appData.LastCoffeePrompt.HasValue && (now - _appData.LastCoffeePrompt.Value).TotalDays < 14)
                 return;
 
-            _appData.LastCoffeePrompt = now;
-            DataService.Save(_appData);
-
             var dialog = new ContentDialog
             {
                 Title = "Support PAYETAXCalc",
@@ -537,9 +570,13 @@ namespace PAYETAXCalc
 
             if (dialog.XamlRoot == null) return;
 
+            // Persist suppression only after confirming the dialog can be shown
+            _appData.LastCoffeePrompt = now;
+            DataService.Save(_appData);
+
             dialog.PrimaryButtonClick += (s, e) =>
             {
-                BuyMeCoffeeButton_Click(null!, null!);
+                MarkCoffeeSupported();
                 _ = Windows.System.Launcher.LaunchUriAsync(new Uri("https://buymeacoffee.com/raymondjstone"));
             };
 

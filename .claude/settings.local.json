@@ -10,7 +10,13 @@
       "Bash(wc:*)",
       "Bash(grep -r \"StudentLoan\\\\|student.loan\\\\|CGT\\\\|capital.gain\\\\|Trading.allowance\\\\|trading.allowance\\\\|Allowance\" /c/Code/PAYETAXCalc/*.cs)",
       "Bash(grep -r \"class\\\\|public.*decimal\\\\|public.*bool\" /c/Code/PAYETAXCalc/Models/*.cs)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(gh pr:*)",
+      "WebFetch(domain:github.com)",
+      "Bash(xxd:*)",
+      "Bash(gh api:*)",
+      "WebFetch(domain:api.github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)"
     ]
   }
 }

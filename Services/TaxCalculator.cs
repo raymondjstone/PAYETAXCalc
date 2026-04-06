@@ -236,7 +236,8 @@ namespace PAYETAXCalc.Services
         private static void BuildSummary(TaxYearData data, TaxYearRules rules, TaxCalculationResult result,
             decimal totalExpenses, decimal totalNIPaid, decimal expectedNI)
         {
-            string regime = data.IsScottishTaxpayer ? "Scottish" : "rUK";
+            string regime = data.IsScottishTaxpayer ? "Scottish"
+                           : data.IsWelshTaxpayer ? "Welsh" : "rUK";
             if (result.TaxOverUnderPayment > 0)
                 result.Summary = $"You may owe £{result.TaxOverUnderPayment:N2} in additional tax ({regime} rates).";
             else if (result.TaxOverUnderPayment < 0)

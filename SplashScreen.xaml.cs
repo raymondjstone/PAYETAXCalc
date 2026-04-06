@@ -1,4 +1,5 @@
 using Microsoft.UI.Xaml.Controls;
+using PAYETAXCalc.Services;
 
 namespace PAYETAXCalc
 {
@@ -7,6 +8,7 @@ namespace PAYETAXCalc
         public SplashScreen()
         {
             this.InitializeComponent();
+            VersionText.Text = $"v{UpdateCheckService.GetCurrentVersion()}";
         }
     }
 }

@@ -13,7 +13,12 @@ namespace PAYETAXCalc.Services
         /// </summary>
         public static List<PayrollPeriodResult> Calculate(PayrollInput input, TaxYearRules rules)
         {
-            int periodsPerYear = (int)input.Frequency;
+            int periodsPerYear = input.Frequency switch
+            {
+                PayFrequency.Monthly => 12,
+                PayFrequency.Weekly => 52,
+                _ => throw new ArgumentOutOfRangeException(nameof(input.Frequency), input.Frequency, $"Unsupported pay frequency: {input.Frequency}"),
+            };
             decimal periodGross = input.AnnualGross / periodsPerYear;
 
             // Derive the taxpayer's free-pay allowance from the tax code
