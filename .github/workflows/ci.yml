@@ -11,6 +11,7 @@ jobs:
   test:
     name: Build & Test
     runs-on: windows-latest
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
 
     steps:
       - uses: actions/checkout@v4
@@ -53,14 +54,25 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
-      - name: Read version from manifest
+      - name: Bump version in manifest
         id: version
         shell: pwsh
         run: |
           [xml]$manifest = Get-Content Package.appxmanifest
-          $version = $manifest.Package.Identity.Version
-          Write-Host "Version: $version"
-          Add-Content -Path $env:GITHUB_OUTPUT -Value "version=$version"
+          $current = [version]$manifest.Package.Identity.Version
+          $bumped = [version]::new($current.Major, $current.Minor, $current.Build + 1, 0)
+          $manifest.Package.Identity.Version = $bumped.ToString()
+          $manifest.Save("$PWD\Package.appxmanifest")
+          Write-Host "Version: $current -> $bumped"
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "version=$bumped"
+
+      - name: Commit version bump
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add Package.appxmanifest
+          git commit -m "Bump version to v${{ steps.version.outputs.version }} [skip ci]"
+          git push
 
       - name: Install WiX toolset
         run: dotnet tool install --global wix

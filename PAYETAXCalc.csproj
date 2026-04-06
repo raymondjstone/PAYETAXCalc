@@ -19,7 +19,6 @@
     <!-- Suppress the XAML-generated Main so our Program.cs can initialize the
          Windows App Runtime before Application.Start() when running unpackaged. -->
     <DefineConstants>$(DefineConstants);DISABLE_XAML_GENERATED_MAIN</DefineConstants>
-    <Version>1.5.0.0</Version>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <DefaultItemExcludes>$(DefaultItemExcludes);PAYETAXCalc.Tests\**;PAYETAXCalc.Core\**</DefaultItemExcludes>
@@ -90,6 +89,19 @@
   <PropertyGroup Condition="'$(DisableHasPackageAndPublishMenuAddedByProject)'!='true' and '$(EnableMsixTooling)'=='true'">
     <HasPackageAndPublishMenu>true</HasPackageAndPublishMenu>
   </PropertyGroup>
+
+  <!-- Read version from Package.appxmanifest so it is the single source of truth -->
+  <Target Name="SetVersionFromManifest" BeforeTargets="GetAssemblyVersion;GenerateNuspec;BeforeBuild">
+    <XmlPeek XmlInputPath="$(MSBuildProjectDirectory)\Package.appxmanifest"
+             Query="/pkg:Package/pkg:Identity/@Version"
+             Namespaces="&lt;Namespace Prefix='pkg' Uri='http://schemas.microsoft.com/appx/manifest/foundation/windows10'/&gt;">
+      <Output TaskParameter="Result" PropertyName="Version" />
+    </XmlPeek>
+    <PropertyGroup>
+      <AssemblyVersion>$(Version)</AssemblyVersion>
+      <FileVersion>$(Version)</FileVersion>
+    </PropertyGroup>
+  </Target>
 
   <!-- Publish Properties -->
   <PropertyGroup>
