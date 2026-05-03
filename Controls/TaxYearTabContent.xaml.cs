@@ -445,9 +445,9 @@ namespace PAYETAXCalc.Controls
             {
                 ResPriorYearTaxRow.Visibility = Visibility.Visible;
                 ResEffectiveTaxPaidRow.Visibility = Visibility.Visible;
-                ResPriorYearTax.Text = $"-£{r.PriorYearTaxCollected:N2}";
-                decimal effectivePaid = r.TotalTaxPaidViaPAYE - r.PriorYearTaxCollected;
-                ResEffectiveTaxPaid.Text = $"£{effectivePaid:N2}";
+                ResPriorYearTax.Text = $"£{Math.Abs(r.PriorYearTaxCollected):N2}";
+                decimal totalIncPriorYear = r.TotalIncomeTaxDue + r.PriorYearTaxCollected;
+                ResEffectiveTaxPaid.Text = $"£{totalIncPriorYear:N2}";
             }
             else
             {
@@ -525,11 +525,15 @@ namespace PAYETAXCalc.Controls
                 ResCGTPanel.Visibility = Visibility.Visible;
                 ResCGT.Text = $"£{r.CapitalGainsTax:N2}";
                 ResCGTInfo.Text = r.CapitalGainsInfo;
+                ResTotalCombinedRow.Visibility = Visibility.Visible;
+                decimal incomeTaxDueIncPrior = r.TotalIncomeTaxDue + r.PriorYearTaxCollected;
+                ResTotalCombinedTaxDue.Text = $"£{incomeTaxDueIncPrior + r.CapitalGainsTax:N2}";
             }
             else
             {
                 ResCGTSection.Visibility = Visibility.Collapsed;
                 ResCGTPanel.Visibility = Visibility.Collapsed;
+                ResTotalCombinedRow.Visibility = Visibility.Collapsed;
             }
 
             // Pension Annual Allowance Charge

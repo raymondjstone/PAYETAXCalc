@@ -689,27 +689,61 @@
 
                     <Border Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="0,6"/>
 
+                    <!-- Step 1: Income Tax from bands -->
                     <Grid ColumnDefinitions="*,Auto">
-                        <TextBlock Text="Total Income Tax Due:" FontSize="16" FontWeight="Bold"/>
+                        <TextBlock Text="Income Tax Due:" FontSize="16" FontWeight="Bold"/>
                         <TextBlock x:Name="ResTotalTaxDue" Grid.Column="1" FontSize="16" FontWeight="Bold"/>
                     </Grid>
-                    <Grid ColumnDefinitions="*,Auto">
-                        <TextBlock Text="Total Tax Paid (PAYE):" FontSize="16"/>
-                        <TextBlock x:Name="ResTotalTaxPaid" Grid.Column="1" FontSize="16"/>
-                    </Grid>
+
+                    <!-- Step 2: Prior year tax added (if applicable) -->
                     <Grid x:Name="ResPriorYearTaxRow" ColumnDefinitions="*,Auto" Visibility="Collapsed">
-                        <TextBlock Text="Less: Prior Year Tax Collected via PAYE:" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                        <TextBlock Text="Plus: Prior Year Tax Collected via PAYE:" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
                         <TextBlock x:Name="ResPriorYearTax" Grid.Column="1" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
                     </Grid>
+
+                    <!-- Step 3: Total income tax due (inc. prior year) -->
                     <Grid x:Name="ResEffectiveTaxPaidRow" ColumnDefinitions="*,Auto" Visibility="Collapsed">
-                        <TextBlock Text="Effective Tax Paid (this year):" FontSize="16" FontWeight="SemiBold"/>
+                        <TextBlock Text="Total Income Tax Due (inc. prior year):" FontSize="16" FontWeight="SemiBold"/>
                         <TextBlock x:Name="ResEffectiveTaxPaid" Grid.Column="1" FontSize="16" FontWeight="SemiBold"/>
                     </Grid>
 
+                    <!-- Step 4: Less tax already paid via PAYE -->
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock Text="Less: Total Tax Paid (PAYE):" FontSize="16"/>
+                        <TextBlock x:Name="ResTotalTaxPaid" Grid.Column="1" FontSize="16"/>
+                    </Grid>
+
+                    <!-- Step 5: Capital Gains Tax -->
+                    <Border x:Name="ResCGTSection" Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="0,8" Visibility="Collapsed"/>
+                    <StackPanel x:Name="ResCGTPanel" Visibility="Collapsed" Spacing="4">
+                        <TextBlock Text="Plus: Capital Gains Tax" FontWeight="SemiBold" Margin="0,4,0,4"/>
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBlock Text="CGT Due:"/>
+                            <TextBlock x:Name="ResCGT" Grid.Column="1" FontWeight="SemiBold"/>
+                        </Grid>
+                        <Expander HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Margin="0,4,0,0">
+                            <Expander.Header>
+                                <TextBlock Text="View CGT Breakdown" Style="{ThemeResource BodyTextBlockStyle}"/>
+                            </Expander.Header>
+                            <Expander.Content>
+                                <TextBlock x:Name="ResCGTInfo" TextWrapping="Wrap"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                           Style="{ThemeResource BodyTextBlockStyle}" Padding="0,8"/>
+                            </Expander.Content>
+                        </Expander>
+                    </StackPanel>
+
+                    <!-- Combined label (Income + CGT) shown when CGT applies -->
+                    <Grid x:Name="ResTotalCombinedRow" ColumnDefinitions="*,Auto" Visibility="Collapsed">
+                        <TextBlock Text="Income and Capital Gains Tax due:" FontSize="16" FontWeight="Bold"/>
+                        <TextBlock x:Name="ResTotalCombinedTaxDue" Grid.Column="1" FontSize="16" FontWeight="Bold"/>
+                    </Grid>
+
+                    <!-- Step 6: Final total -->
                     <Border Height="2" Background="{ThemeResource AccentFillColorDefaultBrush}" Margin="0,8"/>
 
                     <Grid ColumnDefinitions="*,Auto">
-                        <TextBlock x:Name="ResOverUnderLabel" Text="Difference:" FontSize="18" FontWeight="Bold"/>
+                        <TextBlock x:Name="ResOverUnderLabel" Text="Total Due / Overpaid:" FontSize="18" FontWeight="Bold"/>
                         <TextBlock x:Name="ResOverUnder" Grid.Column="1" FontSize="18" FontWeight="Bold"/>
                     </Grid>
 
@@ -764,25 +798,7 @@
                         </Expander>
                     </StackPanel>
 
-                    <!-- Capital Gains Tax Section -->
-                    <Border x:Name="ResCGTSection" Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="0,8" Visibility="Collapsed"/>
-                    <StackPanel x:Name="ResCGTPanel" Visibility="Collapsed" Spacing="4">
-                        <TextBlock Text="Capital Gains Tax" FontWeight="SemiBold" Margin="0,4,0,4"/>
-                        <Grid ColumnDefinitions="*,Auto">
-                            <TextBlock Text="CGT Due:"/>
-                            <TextBlock x:Name="ResCGT" Grid.Column="1" FontWeight="SemiBold"/>
-                        </Grid>
-                        <Expander HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Margin="0,4,0,0">
-                            <Expander.Header>
-                                <TextBlock Text="View CGT Breakdown" Style="{ThemeResource BodyTextBlockStyle}"/>
-                            </Expander.Header>
-                            <Expander.Content>
-                                <TextBlock x:Name="ResCGTInfo" TextWrapping="Wrap"
-                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                           Style="{ThemeResource BodyTextBlockStyle}" Padding="0,8"/>
-                            </Expander.Content>
-                        </Expander>
-                    </StackPanel>
+
 
                     <!-- Pension Annual Allowance Charge Section -->
                     <Border x:Name="ResPensionAACSection" Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="0,8" Visibility="Collapsed"/>
