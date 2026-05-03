@@ -209,14 +209,15 @@ namespace PAYETAXCalc.Services
             // 17. Tax Code Validation
             ValidateTaxCode(data, rules, personalAllowance, result);
 
+
             // 18. Prior year tax collected via this year's PAYE
             decimal priorYearTax = (decimal)data.PriorYearTaxOwed;
             result.PriorYearTaxCollected = priorYearTax;
 
             // 19. Over/under payment (income tax only - student loan, HICBC, CGT shown separately)
-            // Tax paid via PAYE includes prior year collection, so subtract it to get this year's effective payment
-            decimal effectiveTaxPaid = totalTaxPaid - priorYearTax;
-            result.TaxOverUnderPayment = totalTaxDue - effectiveTaxPaid;
+            // Prior year tax owed is ADDED to this year's liability (per HMRC)
+            decimal totalLiability = totalTaxDue + priorYearTax + result.CapitalGainsTax;
+            result.TaxOverUnderPayment = totalLiability - totalTaxPaid;
 
             // 19. Summary
             BuildSummary(data, rules, result, totalExpenses, totalNIPaid, expectedNI);
