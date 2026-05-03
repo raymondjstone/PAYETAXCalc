@@ -376,8 +376,8 @@ public class TaxCalculatorTests
         data.SavingsIncomes.Add(new SavingsIncome { InterestAmount = 1000 });
         var result = TaxCalculator.Calculate(data, Rules202425);
 
-        // £500 covered by PSA, remaining £500 taxed at 40% (positioned in higher band)
-        Assert.Equal(500m * 0.40m, result.SavingsTaxDue);
+        // £500 covered by PSA, remaining £500 taxed at 20% (basic rate band)
+        Assert.Equal(500m * 0.20m, result.SavingsTaxDue);
     }
 
     [Fact]
