@@ -150,17 +150,8 @@ namespace PAYETAXCalc.Services
             // 11. Tax on savings income (always rUK rates, positioned after non-savings)
             decimal savingsTax = CalculateSavingsTax(
                 taxableSavings, taxableNonSavings, nonSavingsIncome,
-                grossIncome, personalAllowance, giftAidGross, rules);
+                grossIncome, personalAllowance, giftAidGross, rules, result);
             result.SavingsTaxDue = savingsTax;
-            if (savingsTax > 0)
-            {
-                result.TaxBreakdown.Add(new TaxBreakdownLine
-                {
-                    Label = "Tax on Savings:",
-                    IncomeText = $"on £{taxableSavings:N2}",
-                    TaxText = $"£{savingsTax:N2}",
-                });
-            }
 
             // 11a. Tax on dividends (own rates, positioned after non-savings + savings)
             decimal dividendTax = CalculateDividendTax(
@@ -352,20 +343,23 @@ namespace PAYETAXCalc.Services
             decimal grossIncome,
             decimal personalAllowance,
             decimal giftAidGross,
-            TaxYearRules rules)
+            TaxYearRules rules,
+            TaxCalculationResult result)
         {
+
             if (taxableSavings <= 0) return 0;
 
-            decimal rUKBasicBandWidth = rules.BasicRateBandWidth + giftAidGross;
-            decimal rUKAdditionalThresholdTaxable = rules.AdditionalRateThresholdGross + giftAidGross - personalAllowance;
-            if (rUKAdditionalThresholdTaxable < rUKBasicBandWidth)
-                rUKAdditionalThresholdTaxable = rUKBasicBandWidth;
+            // Always use rUK/Welsh bands for savings (never Scottish), per UK law
+            // (Scottish bands only apply to non-savings income)
+            var bands = rules.WelshBands.Count > 0 ? rules.WelshBands : rules.RestOfUKBands;
 
-            decimal startingRateAvailable = 0;
+            // 1. Starting rate for savings (if non-savings income after PA is below limit)
             decimal nonSavingsAbovePA = Math.Max(0, nonSavingsIncome - rules.PersonalAllowance);
+            decimal startingRateAvailable = 0;
             if (nonSavingsAbovePA < rules.StartingRateForSavingsLimit)
                 startingRateAvailable = rules.StartingRateForSavingsLimit - nonSavingsAbovePA;
 
+            // 2. Personal Savings Allowance (PSA)
             decimal psa;
             if (taxableNonSavings <= rules.BasicRateBandWidth)
                 psa = rules.PersonalSavingsAllowanceBasic;
@@ -377,27 +371,75 @@ namespace PAYETAXCalc.Services
             decimal savingsRemaining = taxableSavings;
             decimal savingsTax = 0;
 
+            // Collect breakdown lines for savings in a temporary list
+            var savingsBreakdown = new List<TaxBreakdownLine>();
+
+            // 1. Apply starting rate for savings (0% up to limit)
             decimal startingUsed = Math.Min(savingsRemaining, startingRateAvailable);
+            if (startingUsed > 0)
+            {
+                savingsBreakdown.Add(new TaxBreakdownLine
+                {
+                    Label = "  Savings: Starting Rate (0%)",
+                    IncomeText = $"on £{startingUsed:N2}",
+                    TaxText = "£0.00"
+                });
+            }
             savingsRemaining -= startingUsed;
 
+            // 2. Apply PSA (0% up to allowance)
             decimal psaUsed = Math.Min(savingsRemaining, psa);
+            if (psaUsed > 0)
+            {
+                savingsBreakdown.Add(new TaxBreakdownLine
+                {
+                    Label = "  Savings: Personal Savings Allowance (0%)",
+                    IncomeText = $"on £{psaUsed:N2}",
+                    TaxText = "£0.00"
+                });
+            }
             savingsRemaining -= psaUsed;
 
-            if (savingsRemaining > 0)
+            // 3. Tax remaining savings at correct bands, stacked above non-savings
+            // Find the taxable income position where savings start
+            decimal incomeSoFar = taxableNonSavings;
+            int bandIdx = 0;
+            while (bandIdx < bands.Count && bands[bandIdx].UpperGrossThreshold > 0 && incomeSoFar >= bands[bandIdx].UpperGrossThreshold)
+                bandIdx++;
+
+            while (savingsRemaining > 0 && bandIdx < bands.Count)
             {
-                decimal basicBandRemaining = Math.Max(0, rUKBasicBandWidth - taxableNonSavings);
-                decimal higherBandRemaining = Math.Max(0, rUKAdditionalThresholdTaxable - Math.Max(taxableNonSavings, rUKBasicBandWidth));
+                var band = bands[bandIdx];
+                decimal bandUpper = band.UpperGrossThreshold > 0 ? band.UpperGrossThreshold : decimal.MaxValue;
+                decimal bandWidth = bandUpper - incomeSoFar;
+                decimal inBand = Math.Min(savingsRemaining, bandWidth);
+                if (inBand > 0)
+                {
+                    decimal tax = inBand * band.Rate;
+                    savingsTax += tax;
+                    savingsBreakdown.Add(new TaxBreakdownLine
+                    {
+                        Label = $"  Savings: {band.Name}",
+                        IncomeText = $"on £{inBand:N2}",
+                        TaxText = $"£{tax:N2} ({band.Rate:P0})"
+                    });
+                }
+                savingsRemaining -= inBand;
+                incomeSoFar += inBand;
+                bandIdx++;
+            }
 
-                decimal savingsAtBasic = Math.Min(savingsRemaining, basicBandRemaining);
-                savingsTax += savingsAtBasic * rules.BasicRate;
-                savingsRemaining -= savingsAtBasic;
-
-                decimal savingsAtHigher = Math.Min(savingsRemaining, higherBandRemaining);
-                savingsTax += savingsAtHigher * rules.HigherRate;
-                savingsRemaining -= savingsAtHigher;
-
-                if (savingsRemaining > 0)
-                    savingsTax += savingsRemaining * rules.AdditionalRate;
+            // Insert the total line and then the breakdown lines into the main breakdown
+            if (taxableSavings > 0)
+            {
+                result.TaxBreakdown.Add(new TaxBreakdownLine
+                {
+                    Label = "Tax on Savings:",
+                    IncomeText = $"on £{taxableSavings:N2}",
+                    TaxText = $"£{savingsTax:N2}"
+                });
+                foreach (var line in savingsBreakdown)
+                    result.TaxBreakdown.Add(line);
             }
 
             return savingsTax;
