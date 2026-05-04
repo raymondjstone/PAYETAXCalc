@@ -70,10 +70,16 @@
                                     </Button>
                                 </Grid>
 
+
                                 <!-- Pension/Annuity toggle -->
                                 <CheckBox Content="This is a pension or annuity (not active employment)"
                                           IsChecked="{Binding IsPensionOrAnnuity, Mode=TwoWay}"
-                                          Margin="0,0,0,4"/>
+                                          Margin="0,0,0,0"/>
+                                <TextBlock Text="Pension payments do not pay National Insurance."
+                                           Foreground="{ThemeResource SystemFillColorCautionBrush}"
+                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                           Margin="0,0,0,4"
+                                           Visibility="{Binding IsPensionOrAnnuity, Converter={StaticResource BoolToVis}}"/>
 
                                 <!-- Combined Tax & NI option (active employment only) -->
                                 <CheckBox Content="I only have combined Tax &amp; NI figures"

@@ -63,7 +63,7 @@
                     <Grid ColumnSpacing="12">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="150"/>
-                            <ColumnDefinition Width="175"/>
+                            <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="175"/>
                             <ColumnDefinition Width="130"/>
                         </Grid.ColumnDefinitions>
@@ -75,20 +75,34 @@
                             <TextBlock Text="Pay Frequency"
                                        Style="{ThemeResource BodyTextBlockStyle}"
                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                            <StackPanel Orientation="Horizontal" Spacing="16">
+                            <StackPanel Orientation="Horizontal" Spacing="16" MinWidth="180">
                                 <RadioButton x:Name="MonthlyRadio" Content="Monthly"
-                                             IsChecked="True" GroupName="PayFrequency"/>
+                                             IsChecked="True" GroupName="PayFrequency" MinWidth="80"/>
                                 <RadioButton x:Name="WeeklyRadio" Content="Weekly"
-                                             GroupName="PayFrequency"/>
+                                             GroupName="PayFrequency" MinWidth="80"/>
                             </StackPanel>
                         </StackPanel>
 
-                        <NumberBox x:Name="GrossSalaryBox" Header="Annual Gross (£)"
-                                   Grid.Column="2"
-                                   Minimum="0" Maximum="10000000"
-                                   SpinButtonPlacementMode="Hidden"
-                                   HorizontalAlignment="Stretch"
-                                   PlaceholderText="e.g. 35000"/>
+
+                        <StackPanel Grid.Column="2" Spacing="6">
+                            <TextBlock Text="Gross Input Type"
+                                       Style="{ThemeResource BodyTextBlockStyle}"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Spacing="16">
+                                <RadioButton x:Name="AnnualGrossRadio" Content="Annual" IsChecked="True" GroupName="GrossInputType" Checked="GrossInputType_Checked" MinWidth="80"/>
+                                <RadioButton x:Name="WeeklyGrossRadio" Content="Weekly" GroupName="GrossInputType" Checked="GrossInputType_Checked" MinWidth="140"/>
+                            </StackPanel>
+                            <NumberBox x:Name="GrossSalaryBox" Header="Annual Gross (£)"
+                                       Minimum="0" Maximum="10000000"
+                                       SpinButtonPlacementMode="Hidden"
+                                       HorizontalAlignment="Stretch"
+                                       PlaceholderText="e.g. 35000"/>
+                            <NumberBox x:Name="GrossWeeklyBox" Header="Weekly Gross (£)"
+                                       Minimum="0" Maximum="200000"
+                                       SpinButtonPlacementMode="Hidden"
+                                       HorizontalAlignment="Stretch"
+                                       PlaceholderText="e.g. 700" Visibility="Collapsed"/>
+                        </StackPanel>
 
                         <TextBox x:Name="TaxCodeBox" Header="Tax Code"
                                  Grid.Column="3"

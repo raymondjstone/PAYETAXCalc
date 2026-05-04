@@ -72,13 +72,23 @@ namespace PAYETAXCalc.Controls
             string? taxYear = TaxYearCombo.SelectedItem as string;
             if (string.IsNullOrEmpty(taxYear)) return;
 
-            decimal annualGross = double.IsNaN(GrossSalaryBox.Value) ? 0m : (decimal)GrossSalaryBox.Value;
+
+            decimal annualGross = 0m;
+            if (AnnualGrossRadio.IsChecked == true)
+            {
+                annualGross = double.IsNaN(GrossSalaryBox.Value) ? 0m : (decimal)GrossSalaryBox.Value;
+            }
+            else
+            {
+                decimal weeklyGross = double.IsNaN(GrossWeeklyBox.Value) ? 0m : (decimal)GrossWeeklyBox.Value;
+                annualGross = weeklyGross * 52;
+            }
             if (annualGross <= 0m)
             {
                 var dlg = new ContentDialog
                 {
                     Title = "Input Required",
-                    Content = "Please enter a valid annual gross salary.",
+                    Content = AnnualGrossRadio.IsChecked == true ? "Please enter a valid annual gross salary." : "Please enter a valid weekly gross salary.",
                     CloseButtonText = "OK",
                     XamlRoot = Content.XamlRoot,
                 };
@@ -203,5 +213,22 @@ namespace PAYETAXCalc.Controls
 
         private void WelshCheck_Checked(object sender, RoutedEventArgs e) =>
             ScottishCheck.IsChecked = false;
+
+        private void GrossInputType_Checked(object sender, RoutedEventArgs e)
+        {
+            if (AnnualGrossRadio != null && GrossSalaryBox != null && GrossWeeklyBox != null)
+            {
+                if (AnnualGrossRadio.IsChecked == true)
+                {
+                    GrossSalaryBox.Visibility = Visibility.Visible;
+                    GrossWeeklyBox.Visibility = Visibility.Collapsed;
+                }
+                else
+                {
+                    GrossSalaryBox.Visibility = Visibility.Collapsed;
+                    GrossWeeklyBox.Visibility = Visibility.Visible;
+                }
+            }
+        }
     }
 }
